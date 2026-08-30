@@ -43,6 +43,8 @@ class Employee {
         return 'ممرض/ة';
       case 'admin':
         return 'مدير';
+      case 'paramedic':
+        return 'مسعف';
       default:
         return 'موظف';
     }

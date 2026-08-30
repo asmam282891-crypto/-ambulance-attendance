@@ -2,6 +2,20 @@
 -- This uses attendance_users, attendance_records, and attendance_settings.
 -- It does not create or modify the unrelated dispatch tables.
 
+-- Keep the attendance roles aligned with the add-user screen.
+alter table public.attendance_users
+  drop constraint if exists attendance_job_title_check;
+
+alter table public.attendance_users
+  add constraint attendance_job_title_check
+  check (job_title = any (array[
+    'طبيب'::text,
+    'ممرض'::text,
+    'ممرضة'::text,
+    'مسعف'::text,
+    'مدير النظام'::text
+  ]));
+
 -- The login screen uses profiles.username, while the attendance tables use
 -- the Supabase auth user id. The function exposes only the matching email
 -- needed by signInWithPassword.
@@ -285,8 +299,8 @@ begin
   with eligible_users as (
     select id, job_title, role
     from public.attendance_users
-    where role in ('doctor', 'nurse')
-       or job_title in ('طبيب', 'ممرض', 'ممرضة')
+    where role <> 'admin'
+      and job_title <> 'مدير النظام'
   ),
   present_users as (
     select distinct r.user_id
