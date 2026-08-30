@@ -7,6 +7,7 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final IconData? icon;
+  final String? Function(String?)? validator;
 
   const AppTextField({
     super.key,
@@ -15,6 +16,7 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.icon,
+    this.validator,
   });
 
   @override
@@ -30,10 +32,11 @@ class AppTextField extends StatelessWidget {
               ?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          validator: validator,
           textAlign: TextAlign.right,
           decoration: InputDecoration(
             suffixIcon: icon != null

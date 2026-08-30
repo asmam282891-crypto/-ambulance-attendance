@@ -5,6 +5,7 @@ import '../models/employee.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/stat_card.dart';
+import 'add_user_screen.dart';
 import 'login_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -176,8 +177,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: التنقل إلى شاشة إضافة موظف جديد
+                            onPressed: () async {
+                              final created = await Navigator.of(context).push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) => const AddUserScreen(),
+                                ),
+                              );
+                              if (created == true && mounted) {
+                                await _loadData();
+                              }
                             },
                             icon: const Icon(Icons.person_add_alt_1, size: 18),
                             label: const Text('إضافة موظف'),

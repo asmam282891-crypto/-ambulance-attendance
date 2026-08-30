@@ -192,6 +192,40 @@ class SupabaseService {
     }
   }
 
+  Future<void> createAttendanceUser({
+    required String username,
+    required String password,
+    required String fullName,
+    required String employeeNumber,
+    required String jobTitle,
+    required String role,
+    String? department,
+    String? phone,
+  }) async {
+    try {
+      final response = await _client.functions.invoke(
+        'create-attendance-user',
+        body: {
+          'username': username.trim(),
+          'password': password,
+          'full_name': fullName.trim(),
+          'employee_number': employeeNumber.trim(),
+          'job_title': jobTitle,
+          'role': role,
+          'department': department?.trim(),
+          'phone': phone?.trim(),
+        },
+      );
+
+      if (response.status < 200 || response.status >= 300) {
+        throw ApiException('تعذّر إنشاء المستخدم');
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('تعذّر إنشاء المستخدم: ${e.toString()}');
+    }
+  }
+
   Future<AttendanceSettings> fetchAttendanceSettings() async {
     try {
       final row = await _client
