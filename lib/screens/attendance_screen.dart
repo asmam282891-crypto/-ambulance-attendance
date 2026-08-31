@@ -133,7 +133,21 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('الحضور والانصراف'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/logo.png',
+                height: 32,
+                width: 32,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.local_hospital, color: Colors.red),
+              ),
+              const SizedBox(width: 10),
+              const Text('الإسعاف المركزي'),
+            ],
+          ),
+          centerTitle: true,
           actions: [
             IconButton(
               onPressed: _logout,
