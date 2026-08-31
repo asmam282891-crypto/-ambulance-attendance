@@ -135,17 +135,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         appBar: AppBar(
           title: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'IMG_2260831_102105.jpg',
-                height: 32,
-                width: 32,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.local_hospital, color: Colors.red),
-              ),
-              const SizedBox(width: 10),
-              const Text('الإسعاف المركزي'),
-            ],
+              children: [
+                const Icon(Icons.local_hospital, color: Colors.red, size: 28),
+                const SizedBox(width: 10),
+                const Text('الإسعاف المركزي'),
+              ],
+
           ),
           centerTitle: true,
           actions: [
