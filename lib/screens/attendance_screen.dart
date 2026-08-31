@@ -136,23 +136,26 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
-                'assets/logo.png',
-                height: 32,
-                width: 32,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.local_hospital, color: Colors.red),
-              ),
-              const SizedBox(width: 10),
-              const Text('الإسعاف المركزي'),
-            ],
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              onPressed: _logout,
-              icon: const Icon(Icons.logout, size: 20),
-              tooltip: 'تسجيل الخروج',
+                    Image.asset(
+        'IMG_2260831_102105.jpg',
+        height: 32,
+        width: 32,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.local_hospital, color: Colors.red),
+      ),
+      const SizedBox(width: 10),
+      const Text('الإسعاف المركزي'),
+    ],
+  ),
+  centerTitle: true,
+  actions: [
+    IconButton(
+      onPressed: _logout,
+      icon: const Icon(Icons.logout, size: 20),
+      tooltip: 'تسجيل الخروج',
+    ),
+  ],
+
             ),
           ],
         ),
