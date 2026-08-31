@@ -34,11 +34,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
 
-flutter:
+  flutter:
   uses-material-design: true
 
     assets:
-    - IMG_2260831_102105.jpg
+       - IMG_2260831_102105.jpg
  
     
 
