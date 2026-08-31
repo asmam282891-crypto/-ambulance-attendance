@@ -36,6 +36,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  assets:
-    - IMG_2260831_102105.jpg
+
+
 
