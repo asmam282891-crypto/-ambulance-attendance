@@ -21,6 +21,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   _LocationState _locationState = _LocationState.checking;
   Position? _position;
   bool _isCheckedIn = false;
+  String? _checkInTime;
   bool _isSubmitting = false;
   String? _feedback;
 
@@ -28,6 +29,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   void initState() {
     super.initState();
     _isCheckedIn = widget.employee.isCheckedIn;
+    _checkInTime = widget.employee.checkInTime;
     _loadSettingsAndLocation();
   }
 
@@ -74,8 +76,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         longitude: _position!.longitude,
       );
       if (!mounted) return;
+      
+      final now = DateTime.now();
+      final formattedTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
       setState(() {
         _isCheckedIn = true;
+        _checkInTime = formattedTime;
         _feedback = 'تم تسجيل الحضور بنجاح ✅';
       });
     } on ApiException catch (e) {
@@ -103,6 +111,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       if (!mounted) return;
       setState(() {
         _isCheckedIn = false;
+        _checkInTime = null;
         _feedback = 'تم تسجيل الانصراف بنجاح 👋';
       });
     } on ApiException catch (e) {
@@ -133,14 +142,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: Row(
+          title: const Row(
             mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.local_hospital, color: Colors.red, size: 28),
-                const SizedBox(width: 10),
-                const Text('الإسعاف المركزي'),
-              ],
-
+            children: [
+              Icon(Icons.local_hospital, color: Colors.red, size: 28),
+              SizedBox(width: 10),
+              Text('الإسعاف المركزي'),
+            ],
           ),
           centerTitle: true,
           actions: [
@@ -163,9 +171,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               const SizedBox(height: 4),
               Text(widget.employee.roleLabel,
                   style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              
+              // بطاقة حالة الحضور الحالية
+              _buildAttendanceStatusCard(),
+
+              const SizedBox(height: 16),
               _buildLocationCard(),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
               if (_feedback != null) ...[
                 _buildFeedbackBanner(),
                 const SizedBox(height: 16),
@@ -174,7 +187,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 ElevatedButton.icon(
                   onPressed: _canAct ? _scanAndCheckIn : null,
                   icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('مسح باركود الحضور'),
+                  label: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('مسح باركود الحضور'),
                 ),
               ] else ...[
                 ElevatedButton(
@@ -197,6 +219,55 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAttendanceStatusCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _isCheckedIn ? AppColors.successBg : AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _isCheckedIn ? AppColors.success : AppColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _isCheckedIn ? Icons.check_circle : Icons.access_time_filled,
+            color: _isCheckedIn ? AppColors.success : Colors.grey,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isCheckedIn ? 'الحالة: حاضر' : 'الحالة: لم تسجل الحضور',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: _isCheckedIn ? AppColors.success : Colors.black87,
+                  ),
+                ),
+                if (_isCheckedIn && _checkInTime != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '⏰ وقت الحضور: $_checkInTime',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
