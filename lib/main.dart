@@ -9,23 +9,11 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://vdqsdoyqpxuiiznaruuj.supabase.co',
-  );
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    throw StateError(
-      'Missing Supabase configuration. Run with '
-      '--dart-define=SUPABASE_URL=... '
-      '--dart-define=SUPABASE_ANON_KEY=...',
-    );
-  }
-
+  // التهيئة المباشرة بـ URL و Anon JWT Key الصحيحين
   await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
+    url: 'https://vdqsdoyqpxuiiznaruuj.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkcXNkb3lxcHh1aWl6bmFydXVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5MDU0NTksImV4cCI6MjEwMjQ4MTQ1OX0.BMGUe1XVsee_-gviktC25wbqBDUkzuJu20fv8QBRypg',
   );
 
   runApp(const AmbulanceAttendanceApp());
@@ -40,16 +28,11 @@ class AmbulanceAttendanceApp extends StatelessWidget {
       title: 'نظام حضور الإسعاف المركزي',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      // ملاحظة: لترجمة عناصر Material الجاهزة (حوارات التاريخ وغيرها)
-      // للعربية بالكامل، أضف حزمة flutter_localizations في pubspec.yaml
-      // ثم فعّل: locale, supportedLocales, localizationsDelegates.
       home: const _SessionGate(),
     );
   }
 }
 
-/// تتحقق هذه الشاشة أولًا من وجود جلسة Supabase محفوظة قبل عرض شاشة
-/// تسجيل الدخول، حتى لا يُجبر الموظف على تسجيل الدخول في كل مرة.
 class _SessionGate extends StatelessWidget {
   const _SessionGate();
 
