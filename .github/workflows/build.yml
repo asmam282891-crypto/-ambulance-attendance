@@ -13,22 +13,30 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.1'
+          flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: Create missing platform folders with Permissions
+      - name: Create missing platform folders with Permissions (Camera/Barcode & GPS)
         run: |
           flutter create --project-name ambulance_app --org com.ambulance .
           sed -i 's/android:label="ambulance_app"/android:label="الإسعاف المركزي"/' android/app/src/main/AndroidManifest.xml
           sed -i '/<manifest/a \    <uses-permission android:name="android.permission.CAMERA"\/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"\/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"\/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \    <uses-feature android:name="android.hardware.camera" android:required="false" \/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" \/>' android/app/src/main/AndroidManifest.xml
 
-      - run: flutter pub get
+      - name: Install Dependencies
+        run: flutter pub get
+
       - name: Remove old icons cache
         run: rm -rf android/app/src/main/res/mipmap-*
-      - run: dart run flutter_launcher_icons
-      - run: flutter build apk --release
+
+      - name: Generate Launcher Icons
+        run: dart run flutter_launcher_icons
+
+      - name: Build APK
+        run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4
         with:
