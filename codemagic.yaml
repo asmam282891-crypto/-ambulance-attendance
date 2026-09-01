@@ -8,7 +8,7 @@ workflows:
         - supabase_credentials
       flutter: stable
     scripts:
-      - name: Create platform folders with Permissions & Arabic Name
+      - name: Create platform folders and set permissions
         script: |
           flutter create --project-name ambulance_app --org com.ambulance .
           sed -i '' 's/android:label="ambulance_app"/android:label="الإسعاف المركزي"/' android/app/src/main/AndroidManifest.xml
@@ -19,10 +19,12 @@ workflows:
           sed -i '' '/<manifest/a \
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>' android/app/src/main/AndroidManifest.xml
 
-      - name: Set up splash and icons
+      - name: Force Generate Custom Icons and Splash
         script: |
           flutter pub get
+          # مسح كافّة الأيقونات القديمة التي أنشأها أمر flutter create
           rm -rf android/app/src/main/res/mipmap-*
+          # توليد الأيقونات والشاشة الافتتاحية من جديد
           dart run flutter_launcher_icons
           dart run flutter_native_splash:create
 
