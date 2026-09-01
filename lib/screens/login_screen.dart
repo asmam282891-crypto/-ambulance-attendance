@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true; // التحكم في إخفاء/إظهار كلمة المرور
   String? _errorMessage;
 
   @override
@@ -122,8 +123,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   AppTextField(
                     label: 'كلمة المرور',
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     icon: Icons.lock_outline,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 14),
