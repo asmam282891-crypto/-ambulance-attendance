@@ -165,7 +165,7 @@ class SupabaseService {
           .neq('role', 'admin');
 
       if (search != null && search.trim().isNotEmpty) {
-          query = query.ilike('full_name', '%${search.trim()}%');
+        query = query.ilike('full_name', '%${search.trim()}%');
       }
 
       final rows = await query.order('full_name');
@@ -175,7 +175,7 @@ class SupabaseService {
       final openAttendance = await _client
           .from('attendance_records')
           .select('user_id')
-        .isFilter('check_out', null);
+          .isFilter('check_out', null);
 
       final presentIds = (openAttendance as List)
           .map((r) => r['user_id'].toString())
