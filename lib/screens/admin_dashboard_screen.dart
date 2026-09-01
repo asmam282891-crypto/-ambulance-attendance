@@ -377,6 +377,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   employee.roleLabel,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                // عرض وقت الحضور إذا كان الموظف حاضراً
+                if (employee.isCheckedIn && employee.checkInTime != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '⏰ الحضور: ${employee.checkInTime}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
