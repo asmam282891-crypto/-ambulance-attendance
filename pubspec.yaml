@@ -28,11 +28,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - appicon.png
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/appicon.png"
+  image_path: "appicon.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/appicon.png"
+  adaptive_icon_foreground: "appicon.png"
