@@ -34,5 +34,4 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "appicon.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "appicon.png"
+  remove_alpha_ios: true
