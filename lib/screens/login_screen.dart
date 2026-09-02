@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       // التوجيه حسب الدور: المدير للوحة التحكم، وباقي الموظفين لشاشة الحضور
-      if (employee.role == 'admin') {
+      if (employee.isAdmin) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
         );
