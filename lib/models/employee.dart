@@ -4,6 +4,7 @@ class Employee {
   final String id;
   final String fullName;
   final String role; // 'doctor' | 'nurse' | 'admin' | 'paramedic'
+  final String? jobTitle;
   final String? avatarUrl;
   final bool isCheckedIn;
   final String? checkInTime; // زمن الحضور
@@ -13,6 +14,7 @@ class Employee {
     required this.fullName,
     required this.role,
     this.avatarUrl,
+    this.jobTitle,
     this.isCheckedIn = false,
     this.checkInTime,
   });
@@ -43,6 +45,7 @@ class Employee {
       id: map['id']?.toString() ?? '',
       fullName: map['full_name'] ?? map['name'] ?? '',
       role: map['role'] ?? 'employee',
+      jobTitle: map['job_title']?.toString(),
       avatarUrl: map['avatar_url'],
       isCheckedIn: isCheckedIn ?? statusFromMap,
       checkInTime: formattedTime,
@@ -72,12 +75,19 @@ class Employee {
       fullName: fullName,
       role: role,
       avatarUrl: avatarUrl,
+      jobTitle: jobTitle,
       isCheckedIn: isCheckedIn ?? this.isCheckedIn,
       checkInTime: checkInTime ?? this.checkInTime,
     );
   }
 
+  bool get isAdmin =>
+      role.toLowerCase() == 'admin' ||
+      jobTitle?.trim() == 'مدير النظام';
+
   String get roleLabel {
+    if (isAdmin) return 'مدير';
+
     switch (role) {
       case 'doctor':
         return 'طبيب';
