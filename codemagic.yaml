@@ -61,6 +61,13 @@ workflows:
       - name: Generate application icon
         script: |
           dart run flutter_launcher_icons
+          echo "Generated Android launcher icon files:"
+          find android/app/src/main/res -type f -name 'ic_launcher*' -print
+          icon_count=$(find android/app/src/main/res -type f -name 'ic_launcher*' | wc -l)
+          if [ "$icon_count" -eq 0 ]; then
+            echo "ERROR: Android launcher icons were not generated"
+            exit 1
+          fi
 
       - name: Generate splash screen
         script: |
