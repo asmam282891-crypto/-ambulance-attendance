@@ -41,6 +41,8 @@ class _AttendanceScreenState
 
   String? _checkInTime;
 
+  String? _checkOutTime;
+
   bool _isSubmitting = false;
 
   String? _feedback;
@@ -149,6 +151,7 @@ class _AttendanceScreenState
 
         _checkInTime =
             formattedTime;
+        _checkOutTime = null;
 
         _feedback =
             'تم تسجيل الحضور بنجاح ✅';
@@ -191,10 +194,15 @@ class _AttendanceScreenState
 
       if (!mounted) return;
 
+      final now = DateTime.now();
+      final formattedTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
       setState(() {
         _isCheckedIn = false;
 
-        _checkInTime = null;
+        // نحتفظ بوقت الحضور ونضيف وقت الانصراف.
+        _checkOutTime = formattedTime;
 
         _feedback =
             'تم تسجيل الانصراف بنجاح 👋';
@@ -246,18 +254,17 @@ class _AttendanceScreenState
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Row(
+          title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.local_hospital,
-                color: Colors.red,
-                size: 28,
+              Image.asset(
+                'app_icon.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
               ),
-              SizedBox(width: 10),
-              Text(
-                'الإسعاف المركزي',
-              ),
+              const SizedBox(width: 10),
+              const Text('الإسعاف المركزي'),
             ],
           ),
           centerTitle: true,
