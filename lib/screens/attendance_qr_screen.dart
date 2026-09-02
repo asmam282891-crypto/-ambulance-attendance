@@ -129,7 +129,17 @@ class _AttendanceQrScreenState extends State<AttendanceQrScreen> {
               version: QrVersions.auto,
               size: 280,
               backgroundColor: Colors.white,
-              gapless: false,
+              gapless: true,
+              dataModuleStyle: const QrDataModuleStyle(
+                color: Colors.black,
+                dataModuleShape: QrDataModuleShape.square,
+              ),
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Colors.black,
+              ),
+              embeddedImage: null,
+              embeddedImageStyle: null,
             ),
           ),
           const SizedBox(height: 18),
