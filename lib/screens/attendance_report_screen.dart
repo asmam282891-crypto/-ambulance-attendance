@@ -87,6 +87,12 @@ class _AttendanceReportScreenState
     ).format(dateTime.toLocal());
   }
 
+  String _formatDate(dynamic value) {
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    final date = parsed ?? _selectedDate;
+    return DateFormat('dd/MM/yyyy').format(date.toLocal());
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateText = DateFormat(
@@ -273,6 +279,9 @@ class _AttendanceReportScreenState
     final checkOut =
         _formatTime(record['check_out']);
 
+    final attendanceDate =
+        _formatDate(record['attendance_date']);
+
     final hasCheckedOut =
         record['check_out'] != null;
 
@@ -349,6 +358,26 @@ class _AttendanceReportScreenState
                         color: Color(0xFFC62828),
                         fontSize: 13,
                       ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'تاريخ الحضور: $attendanceDate',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
