@@ -8,7 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/stat_card.dart';
 
 import 'add_user_screen.dart';
-import 'reports/attendance_report_screen.dart';
+import 'attendance_report_screen.dart';
 import 'login_screen.dart';
 import 'qr_scan_screen.dart';
 
@@ -161,7 +161,6 @@ class _AdminDashboardScreenState
             ),
           ],
         ),
-
         body: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(),
@@ -171,8 +170,6 @@ class _AdminDashboardScreenState
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-
-                    // رسالة الخطأ
                     if (_errorMessage != null)
                       Container(
                         width: double.infinity,
@@ -215,7 +212,6 @@ class _AdminDashboardScreenState
                       mainAxisSpacing: 12,
                       childAspectRatio: 1.3,
                       children: [
-
                         StatCard(
                           emoji: '👨‍⚕️',
                           label: 'الأطباء',
@@ -227,7 +223,6 @@ class _AdminDashboardScreenState
                               AppColors.navy
                                   .withOpacity(0.08),
                         ),
-
                         StatCard(
                           emoji: '👩‍⚕️',
                           label: 'الممرضين',
@@ -239,7 +234,6 @@ class _AdminDashboardScreenState
                               AppColors.navySoft
                                   .withOpacity(0.08),
                         ),
-
                         StatCard(
                           emoji: '✅',
                           label: 'الحاضرون',
@@ -250,7 +244,6 @@ class _AdminDashboardScreenState
                           backgroundColor:
                               AppColors.successBg,
                         ),
-
                         StatCard(
                           emoji: '❌',
                           label: 'الغائبون',
@@ -266,9 +259,6 @@ class _AdminDashboardScreenState
 
                     const SizedBox(height: 28),
 
-                    // =========================
-                    // إدارة الموظفين
-                    // =========================
                     Text(
                       'إدارة الموظفين',
                       style: Theme.of(context)
@@ -283,8 +273,6 @@ class _AdminDashboardScreenState
                     // =========================
                     Row(
                       children: [
-
-                        // إضافة موظف
                         Expanded(
                           child:
                               OutlinedButton.icon(
@@ -333,7 +321,6 @@ class _AdminDashboardScreenState
 
                         const SizedBox(width: 10),
 
-                        // مسح الباركود
                         Expanded(
                           child:
                               OutlinedButton.icon(
@@ -507,11 +494,8 @@ class _AdminDashboardScreenState
           color: AppColors.border,
         ),
       ),
-
       child: Row(
         children: [
-
-          // صورة الموظف
           CircleAvatar(
             radius: 18,
             backgroundColor:
@@ -533,13 +517,11 @@ class _AdminDashboardScreenState
 
           const SizedBox(width: 12),
 
-          // بيانات الموظف
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-
                 Text(
                   employee.title,
                   style:
@@ -557,7 +539,6 @@ class _AdminDashboardScreenState
                           .bodySmall,
                 ),
 
-                // عرض وقت الحضور
                 if (employee.isCheckedIn &&
                     employee.checkInTime != null)
                   Padding(
@@ -581,7 +562,6 @@ class _AdminDashboardScreenState
             ),
           ),
 
-          // حالة الموظف
           Container(
             padding:
                 const EdgeInsets.symmetric(
