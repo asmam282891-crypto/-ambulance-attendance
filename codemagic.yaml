@@ -79,13 +79,25 @@ workflows:
 
           path = Path("android/app/src/main/AndroidManifest.xml")
           text = path.read_text()
-          text = text.replace(
-              'android:icon="@mipmap/ic_launcher"',
-              'android:icon="@drawable/app_icon"'
+          import re
+
+          text = re.sub(
+              r'android:icon="[^"]+"',
+              'android:icon="@drawable/app_icon"',
+              text,
+              count=1,
           )
-          text = text.replace(
-              'android:roundIcon="@mipmap/ic_launcher_round"',
-              'android:roundIcon="@drawable/app_icon"'
+          text = re.sub(
+              r'android:roundIcon="[^"]+"',
+              'android:roundIcon="@drawable/app_icon"',
+              text,
+              count=1,
+          )
+          text = re.sub(
+              r'android:label="[^"]+"',
+              'android:label="الإسعاف المركزي"',
+              text,
+              count=1,
           )
           path.write_text(text)
           PY
