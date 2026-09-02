@@ -11,6 +11,7 @@ import 'add_user_screen.dart';
 import 'attendance_report_screen.dart';
 import 'login_screen.dart';
 import 'qr_scan_screen.dart';
+import 'attendance_qr_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -127,6 +128,15 @@ class _AdminDashboardScreenState
         builder: (_) => const LoginScreen(),
       ),
       (route) => false,
+    );
+  }
+
+  // عرض باركود الموظفين المشترك للمدير
+  void _openAttendanceQr() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const AttendanceQrScreen(),
+      ),
     );
   }
 
@@ -366,6 +376,23 @@ class _AdminDashboardScreenState
                     const SizedBox(height: 12),
 
                     // =========================
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _openAttendanceQr,
+                        icon: const Icon(Icons.qr_code_2, size: 22),
+                        label: const Text('عرض باركود الموظفين للطباعة'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(50),
+                          foregroundColor: AppColors.navy,
+                          side: const BorderSide(color: AppColors.navy),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
                     // سجل الحضور والانصراف
                     // =========================
                     SizedBox(
