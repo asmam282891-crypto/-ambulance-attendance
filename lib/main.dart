@@ -51,7 +51,7 @@ class _SessionGate extends StatelessWidget {
         if (employee == null) {
           return const LoginScreen();
         }
-        if (employee.role == 'admin') {
+        if (employee.isAdmin) {
           return const AdminDashboardScreen();
         }
         return AttendanceScreen(employee: employee);
