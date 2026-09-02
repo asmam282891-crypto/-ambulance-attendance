@@ -3,29 +3,58 @@ workflows:
     name: Android Build
     max_build_duration: 120
     instance_type: mac_mini_m1
+
     environment:
       groups:
         - supabase_credentials
       flutter: stable
-    scripts:
-      - name: Create platform folders and set permissions
-        script: |
-          flutter create --project-name ambulance_app --org com.ambulance .
-          sed -i '' 's/android:label="ambulance_app"/android:label="الإسعاف المركزي"/' android/app/src/main/AndroidManifest.xml
-          sed -i '' '/<manifest/a \
-              <uses-permission android:name="android.permission.CAMERA"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '' '/<manifest/a \
-              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '' '/<manifest/a \
-              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>' android/app/src/main/AndroidManifest.xml
 
-      - name: Force Generate Custom Icons and Splash
+    scripts:
+
+      - name: Create Android platform
         script: |
+          flutter create \
+            --project-name ambulance_app \
+            --org com.ambulance \
+            --platforms android .
+
+      - name: Configure Android permissions
+        script: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          text = path.read_text()
+
+          permissions = """
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+          """
+
+          if "android.permission.CAMERA" not in text:
+              position = text.find(">")
+              text = text[:position + 1] + permissions + text[position + 1:]
+
+          text = text.replace(
+              'android:label="ambulance_app"',
+              'android:label="الإسعاف المركزي"'
+          )
+
+          path.write_text(text)
+          PY
+
+      - name: Get packages
+        script: |
+          flutter clean
           flutter pub get
-          # مسح كافّة الأيقونات القديمة التي أنشأها أمر flutter create
-          rm -rf android/app/src/main/res/mipmap-*
-          # توليد الأيقونات والشاشة الافتتاحية من جديد
+
+      - name: Generate application icon
+        script: |
           dart run flutter_launcher_icons
+
+      - name: Generate splash screen
+        script: |
           dart run flutter_native_splash:create
 
       - name: Build Android APK
