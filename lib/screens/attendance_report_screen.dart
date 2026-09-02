@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -74,8 +76,9 @@ class _AttendanceReportScreenState
   String _formatTime(dynamic value) {
     if (value == null) return '—';
 
-    final dateTime =
-        DateTime.tryParse(value.toString());
+    final dateTime = DateTime.tryParse(
+      value.toString(),
+    );
 
     if (dateTime == null) return '—';
 
@@ -86,12 +89,12 @@ class _AttendanceReportScreenState
 
   @override
   Widget build(BuildContext context) {
-    final dateText =
-        DateFormat('dd/MM/yyyy')
-            .format(_selectedDate);
+    final dateText = DateFormat(
+      'dd/MM/yyyy',
+    ).format(_selectedDate);
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -99,44 +102,31 @@ class _AttendanceReportScreenState
           ),
           centerTitle: true,
         ),
-
         body: RefreshIndicator(
           onRefresh: _loadReport,
-
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-
-              // اختيار التاريخ
               InkWell(
                 onTap: _selectDate,
-                borderRadius:
-                    BorderRadius.circular(16),
-
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding:
-                      const EdgeInsets.all(16),
-
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius:
-                        BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: Colors.grey.shade300,
                     ),
                   ),
-
                   child: Row(
                     children: [
-
                       const Icon(
                         Icons.calendar_month,
                         color: Color(0xFFC62828),
                         size: 28,
                       ),
-
                       const SizedBox(width: 12),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment:
@@ -149,22 +139,17 @@ class _AttendanceReportScreenState
                                 fontSize: 12,
                               ),
                             ),
-
                             const SizedBox(height: 4),
-
                             Text(
                               dateText,
-                              style:
-                                  const TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
-                                fontWeight:
-                                    FontWeight.bold,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                       ),
-
                       const Icon(
                         Icons.arrow_drop_down,
                       ),
@@ -179,22 +164,16 @@ class _AttendanceReportScreenState
                 const Padding(
                   padding: EdgeInsets.all(50),
                   child: Center(
-                    child:
-                        CircularProgressIndicator(),
+                    child: CircularProgressIndicator(),
                   ),
                 )
-
               else if (_error != null)
                 Container(
-                  padding:
-                      const EdgeInsets.all(20),
-
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
-                    borderRadius:
-                        BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-
                   child: Column(
                     children: [
                       const Icon(
@@ -202,20 +181,15 @@ class _AttendanceReportScreenState
                         color: Colors.red,
                         size: 45,
                       ),
-
                       const SizedBox(height: 10),
-
                       Text(
                         _error!,
-                        textAlign:
-                            TextAlign.center,
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.red,
                         ),
                       ),
-
                       const SizedBox(height: 12),
-
                       ElevatedButton(
                         onPressed: _loadReport,
                         child: const Text(
@@ -225,25 +199,20 @@ class _AttendanceReportScreenState
                     ],
                   ),
                 )
-
               else if (_records.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(45),
                   child: Column(
                     children: [
-
                       Icon(
                         Icons.event_busy,
                         size: 60,
                         color: Colors.grey,
                       ),
-
                       SizedBox(height: 15),
-
                       Text(
                         'لا يوجد موظفون سجلوا حضورهم في هذا اليوم',
-                        textAlign:
-                            TextAlign.center,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey,
@@ -252,7 +221,6 @@ class _AttendanceReportScreenState
                     ],
                   ),
                 )
-
               else ...[
                 Row(
                   children: [
@@ -260,15 +228,12 @@ class _AttendanceReportScreenState
                       Icons.people,
                       color: Color(0xFFC62828),
                     ),
-
                     const SizedBox(width: 8),
-
                     Text(
                       'المسجلون: ${_records.length}',
                       style: const TextStyle(
                         fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -291,27 +256,16 @@ class _AttendanceReportScreenState
     Map<String, dynamic> record,
   ) {
     final username =
-        record['username']
-            ?.toString()
-            .trim() ??
-        '';
+        record['username']?.toString().trim() ?? '';
 
     final fullName =
-        record['full_name']
-            ?.toString()
-            .trim() ??
-        '';
+        record['full_name']?.toString().trim() ?? '';
 
     final jobTitle =
-        record['job_title']
-            ?.toString()
-            .trim() ??
-        '';
+        record['job_title']?.toString().trim() ?? '';
 
     final status =
-        record['status']
-            ?.toString() ??
-        '';
+        record['status']?.toString() ?? '';
 
     final checkIn =
         _formatTime(record['check_in']);
@@ -323,53 +277,36 @@ class _AttendanceReportScreenState
         record['check_out'] != null;
 
     return Container(
-      margin:
-          const EdgeInsets.only(bottom: 12),
-
-      padding:
-          const EdgeInsets.all(16),
-
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: Colors.grey.shade300,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withOpacity(0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 8,
-            offset:
-                const Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-
       child: Column(
         children: [
-
-          // اسم المستخدم والوظيفة
           Row(
             children: [
-
               CircleAvatar(
                 radius: 25,
-                backgroundColor:
-                    Colors.red.shade50,
-
+                backgroundColor: Colors.red.shade50,
                 child: Text(
                   username.isNotEmpty
-                      ? username[0]
-                          .toUpperCase()
+                      ? username[0].toUpperCase()
                       : 'م',
-
                   style: const TextStyle(
-                    color:
-                        Color(0xFFC62828),
-                    fontWeight:
-                        FontWeight.bold,
+                    color: Color(0xFFC62828),
+                    fontWeight: FontWeight.bold,
                     fontSize: 18,
                   ),
                 ),
@@ -381,19 +318,14 @@ class _AttendanceReportScreenState
                 child: Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
-
                   children: [
-
                     Text(
                       fullName.isEmpty
                           ? 'بدون اسم'
                           : fullName,
-
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
 
@@ -401,8 +333,7 @@ class _AttendanceReportScreenState
 
                     Text(
                       '@$username',
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 13,
                       ),
@@ -414,11 +345,8 @@ class _AttendanceReportScreenState
                       jobTitle.isEmpty
                           ? 'موظف'
                           : jobTitle,
-
-                      style:
-                          const TextStyle(
-                        color:
-                            Color(0xFFC62828),
+                      style: const TextStyle(
+                        color: Color(0xFFC62828),
                         fontSize: 13,
                       ),
                     ),
@@ -426,37 +354,28 @@ class _AttendanceReportScreenState
                 ),
               ),
 
-              // الحالة
               Container(
-                padding:
-                    const EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 6,
                 ),
-
                 decoration: BoxDecoration(
                   color: hasCheckedOut
                       ? Colors.grey.shade100
                       : Colors.green.shade50,
-
-                  borderRadius:
-                      BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-
                 child: Text(
                   status.isEmpty
                       ? (hasCheckedOut
                           ? 'انصرف'
                           : 'حاضر')
                       : status,
-
                   style: TextStyle(
                     color: hasCheckedOut
                         ? Colors.grey.shade700
                         : Colors.green.shade700,
-
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
                 ),
@@ -466,10 +385,8 @@ class _AttendanceReportScreenState
 
           const Divider(height: 25),
 
-          // الأوقات
           Row(
             children: [
-
               Expanded(
                 child: _timeBox(
                   icon: Icons.login,
@@ -503,18 +420,13 @@ class _AttendanceReportScreenState
     required Color color,
   }) {
     return Container(
-      padding:
-          const EdgeInsets.all(12),
-
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.06),
-        borderRadius:
-            BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
       ),
-
       child: Row(
         children: [
-
           Icon(
             icon,
             color: color,
@@ -527,13 +439,10 @@ class _AttendanceReportScreenState
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
-
                 Text(
                   title,
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
                     color: Colors.grey,
                   ),
@@ -543,10 +452,8 @@ class _AttendanceReportScreenState
 
                 Text(
                   value,
-                  style:
-                      const TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),
