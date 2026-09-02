@@ -69,6 +69,28 @@ workflows:
             exit 1
           fi
 
+          # Force the real app icon in the generated Android manifest.
+          # Codemagic creates the Android platform during this build, so this
+          # prevents the default Flutter icon from surviving in the APK.
+          mkdir -p android/app/src/main/res/drawable
+          cp app_icon.png android/app/src/main/res/drawable/app_icon.png
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          text = path.read_text()
+          text = text.replace(
+              'android:icon="@mipmap/ic_launcher"',
+              'android:icon="@drawable/app_icon"'
+          )
+          text = text.replace(
+              'android:roundIcon="@mipmap/ic_launcher_round"',
+              'android:roundIcon="@drawable/app_icon"'
+          )
+          path.write_text(text)
+          PY
+          grep -q 'android:icon="@drawable/app_icon"' android/app/src/main/AndroidManifest.xml
+
       - name: Generate splash screen
         script: |
           dart run flutter_native_splash:create
