@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../theme/app_theme.dart';
@@ -16,12 +18,23 @@ class _QrScanScreenState extends State<QrScanScreen> {
   bool _handled = false;
 
   void _onDetect(BarcodeCapture capture) {
-    if (_handled) return;
-    if (capture.barcodes.isEmpty) return;
-    final barcode = capture.barcodes.first;
-    final value = barcode.rawValue;
-    if (value == null) return;
+    if (_handled || !mounted) return;
+
+    // لا نعتمد على أول عنصر فقط؛ قد تُرجع الكاميرا أكثر من نتيجة
+    // ويكون أول عنصر بلا rawValue بينما تكون النتيجة الصحيحة بعده.
+    final value = capture.barcodes
+        .map((barcode) => barcode.rawValue?.trim())
+        .firstWhere(
+          (rawValue) => rawValue != null && rawValue.isNotEmpty,
+          orElse: () => null,
+        );
+
+    if (value == null || value.isEmpty) return;
+
     _handled = true;
+    // إيقاف الكاميرا قبل إغلاق الشاشة يمنع تكرار القراءة أو بقاء الكاميرا
+    // مشغلة عند العودة إلى شاشة الحضور.
+    unawaited(_controller.stop());
     Navigator.of(context).pop(value);
   }
 
@@ -44,13 +57,20 @@ class _QrScanScreenState extends State<QrScanScreen> {
         ),
         body: Stack(
           children: [
-            MobileScanner(controller: _controller, onDetect: _onDetect),
+            MobileScanner(
+              controller: _controller,
+              fit: BoxFit.cover,
+              onDetect: _onDetect,
+            ),
             Center(
               child: Container(
                 width: 240,
                 height: 240,
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.ambulanceRed, width: 3),
+                  border: Border.all(
+                    color: AppColors.ambulanceRed,
+                    width: 3,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
@@ -62,7 +82,10 @@ class _QrScanScreenState extends State<QrScanScreen> {
               child: Text(
                 'وجّه الكاميرا نحو باركود نقطة الحضور',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
               ),
             ),
           ],
