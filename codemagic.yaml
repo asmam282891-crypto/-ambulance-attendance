@@ -18,6 +18,13 @@ workflows:
             --org com.ambulance \
             --platforms android .
 
+      - name: Check icon files
+        script: |
+          echo "Checking app_icon.png..."
+          ls -lh app_icon.png
+          echo "Checking splash.png..."
+          ls -lh splash.png
+
       - name: Configure Android permissions
         script: |
           python3 - <<'PY'
