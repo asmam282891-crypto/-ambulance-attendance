@@ -20,7 +20,8 @@ class AdminDashboardScreen extends StatefulWidget {
       _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState
+    extends State<AdminDashboardScreen> {
   final _searchController = TextEditingController();
 
   DashboardStats _stats = DashboardStats.empty();
@@ -133,7 +134,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void _openAttendanceReport() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const AttendanceReportScreen(),
+        builder: (_) =>
+            const AttendanceReportScreen(),
       ),
     );
   }
@@ -159,6 +161,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         ),
+
         body: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(),
@@ -168,24 +171,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
+
                     // رسالة الخطأ
                     if (_errorMessage != null)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(
+                        padding:
+                            const EdgeInsets.all(12),
+                        margin:
+                            const EdgeInsets.only(
                           bottom: 16,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.dangerBg,
+                        decoration:
+                            BoxDecoration(
+                          color:
+                              AppColors.dangerBg,
                           borderRadius:
-                              BorderRadius.circular(10),
+                              BorderRadius.circular(
+                            10,
+                          ),
                         ),
                         child: Text(
                           _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.danger,
+                          textAlign:
+                              TextAlign.center,
+                          style:
+                              const TextStyle(
+                            color:
+                                AppColors.danger,
                           ),
                         ),
                       ),
@@ -202,36 +215,49 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       mainAxisSpacing: 12,
                       childAspectRatio: 1.3,
                       children: [
+
                         StatCard(
                           emoji: '👨‍⚕️',
                           label: 'الأطباء',
-                          value: _stats.doctorsCount,
-                          color: AppColors.navy,
+                          value:
+                              _stats.doctorsCount,
+                          color:
+                              AppColors.navy,
                           backgroundColor:
-                              AppColors.navy.withOpacity(0.08),
+                              AppColors.navy
+                                  .withOpacity(0.08),
                         ),
+
                         StatCard(
                           emoji: '👩‍⚕️',
                           label: 'الممرضين',
-                          value: _stats.nursesCount,
-                          color: AppColors.navySoft,
+                          value:
+                              _stats.nursesCount,
+                          color:
+                              AppColors.navySoft,
                           backgroundColor:
                               AppColors.navySoft
                                   .withOpacity(0.08),
                         ),
+
                         StatCard(
                           emoji: '✅',
                           label: 'الحاضرون',
-                          value: _stats.presentCount,
-                          color: AppColors.success,
+                          value:
+                              _stats.presentCount,
+                          color:
+                              AppColors.success,
                           backgroundColor:
                               AppColors.successBg,
                         ),
+
                         StatCard(
                           emoji: '❌',
                           label: 'الغائبون',
-                          value: _stats.absentCount,
-                          color: AppColors.danger,
+                          value:
+                              _stats.absentCount,
+                          color:
+                              AppColors.danger,
                           backgroundColor:
                               AppColors.dangerBg,
                         ),
@@ -257,25 +283,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     // =========================
                     Row(
                       children: [
+
                         // إضافة موظف
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child:
+                              OutlinedButton.icon(
                             onPressed: () async {
                               final created =
-                                  await Navigator.of(context)
-                                      .push<bool>(
+                                  await Navigator.of(
+                                context,
+                              ).push<bool>(
                                 MaterialPageRoute(
                                   builder: (_) =>
                                       const AddUserScreen(),
                                 ),
                               );
 
-                              if (created == true && mounted) {
+                              if (created == true &&
+                                  mounted) {
                                 await _loadData();
                               }
                             },
                             icon: const Icon(
-                              Icons.person_add_alt_1,
+                              Icons
+                                  .person_add_alt_1,
                               size: 18,
                             ),
                             label: const Text(
@@ -284,11 +315,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             style:
                                 OutlinedButton.styleFrom(
                               minimumSize:
-                                  const Size.fromHeight(46),
+                                  const Size
+                                      .fromHeight(
+                                46,
+                              ),
                               shape:
                                   RoundedRectangleBorder(
                                 borderRadius:
-                                    BorderRadius.circular(12),
+                                    BorderRadius
+                                        .circular(
+                                  12,
+                                ),
                               ),
                             ),
                           ),
@@ -298,9 +335,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
                         // مسح الباركود
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child:
+                              OutlinedButton.icon(
                             onPressed: () {
-                              Navigator.of(context).push(
+                              Navigator.of(
+                                context,
+                              ).push(
                                 MaterialPageRoute(
                                   builder: (_) =>
                                       const QrScanScreen(),
@@ -308,7 +348,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               );
                             },
                             icon: const Icon(
-                              Icons.qr_code_scanner,
+                              Icons
+                                  .qr_code_scanner,
                               size: 22,
                             ),
                             label: const Text(
@@ -317,11 +358,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             style:
                                 OutlinedButton.styleFrom(
                               minimumSize:
-                                  const Size.fromHeight(46),
+                                  const Size
+                                      .fromHeight(
+                                46,
+                              ),
                               shape:
                                   RoundedRectangleBorder(
                                 borderRadius:
-                                    BorderRadius.circular(12),
+                                    BorderRadius
+                                        .circular(
+                                  12,
+                                ),
                               ),
                             ),
                           ),
@@ -336,32 +383,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     // =========================
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _openAttendanceReport,
+                      child:
+                          OutlinedButton.icon(
+                        onPressed:
+                            _openAttendanceReport,
                         icon: const Icon(
-                          Icons.assignment_outlined,
+                          Icons
+                              .assignment_outlined,
                           size: 23,
                         ),
                         label: const Text(
                           'سجل الحضور والانصراف',
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                            fontWeight:
+                                FontWeight.w600,
                           ),
                         ),
                         style:
                             OutlinedButton.styleFrom(
                           minimumSize:
-                              const Size.fromHeight(50),
+                              const Size
+                                  .fromHeight(
+                            50,
+                          ),
                           foregroundColor:
-                              AppColors.ambulanceRed,
-                          side: const BorderSide(
-                            color: AppColors.ambulanceRed,
+                              AppColors
+                                  .ambulanceRed,
+                          side:
+                              const BorderSide(
+                            color: AppColors
+                                .ambulanceRed,
                           ),
                           shape:
                               RoundedRectangleBorder(
                             borderRadius:
-                                BorderRadius.circular(12),
+                                BorderRadius.circular(
+                              12,
+                            ),
                           ),
                         ),
                       ),
@@ -373,13 +432,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     // البحث
                     // =========================
                     TextField(
-                      controller: _searchController,
-                      onChanged: _scheduleEmployeeSearch,
-                      textAlign: TextAlign.right,
+                      controller:
+                          _searchController,
+                      onChanged:
+                          _scheduleEmployeeSearch,
+                      textAlign:
+                          TextAlign.right,
                       decoration:
                           const InputDecoration(
-                        hintText: 'البحث عن موظف...',
-                        prefixIcon: Icon(
+                        hintText:
+                            'البحث عن موظف...',
+                        prefixIcon:
+                            Icon(
                           Icons.search,
                           size: 20,
                         ),
@@ -398,12 +462,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     if (_employees.isEmpty)
                       Padding(
                         padding:
-                            const EdgeInsets.symmetric(
+                            const EdgeInsets
+                                .symmetric(
                           vertical: 32,
                         ),
                         child: Text(
                           'لا يوجد موظفون مطابقون للبحث',
-                          textAlign: TextAlign.center,
+                          textAlign:
+                              TextAlign.center,
                           style:
                               Theme.of(context)
                                   .textTheme
@@ -424,32 +490,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Employee employee,
   ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(
+      margin:
+          const EdgeInsets.only(bottom: 10),
+      padding:
+          const EdgeInsets.symmetric(
         horizontal: 14,
         vertical: 10,
       ),
-      decoration: BoxDecoration(
+      decoration:
+          BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
+        borderRadius:
+            BorderRadius.circular(12),
+        border:
+            Border.all(
           color: AppColors.border,
         ),
       ),
+
       child: Row(
         children: [
+
           // صورة الموظف
           CircleAvatar(
             radius: 18,
             backgroundColor:
-                AppColors.ambulanceRed.withOpacity(0.1),
+                AppColors.ambulanceRed
+                    .withOpacity(0.1),
             child: Text(
               employee.fullName.isNotEmpty
                   ? employee.fullName[0]
                   : '؟',
-              style: const TextStyle(
-                color: AppColors.ambulanceRed,
-                fontWeight: FontWeight.bold,
+              style:
+                  const TextStyle(
+                color:
+                    AppColors.ambulanceRed,
+                fontWeight:
+                    FontWeight.bold,
               ),
             ),
           ),
@@ -462,17 +539,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
+
                 Text(
                   employee.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
+                  style:
+                      const TextStyle(
+                    fontWeight:
+                        FontWeight.w600,
                   ),
                 ),
+
                 Text(
                   employee.roleLabel,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall,
+                  style:
+                      Theme.of(context)
+                          .textTheme
+                          .bodySmall,
                 ),
 
                 // عرض وقت الحضور
@@ -480,13 +562,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     employee.checkInTime != null)
                   Padding(
                     padding:
-                        const EdgeInsets.only(top: 2),
+                        const EdgeInsets.only(
+                      top: 2,
+                    ),
                     child: Text(
                       '⏰ الحضور: ${employee.checkInTime}',
-                      style: const TextStyle(
+                      style:
+                          const TextStyle(
                         fontSize: 11,
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w500,
+                        color:
+                            AppColors.success,
+                        fontWeight:
+                            FontWeight.w500,
                       ),
                     ),
                   ),
@@ -496,11 +583,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
           // حالة الموظف
           Container(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 10,
               vertical: 4,
             ),
-            decoration: BoxDecoration(
+            decoration:
+                BoxDecoration(
               color: employee.isCheckedIn
                   ? AppColors.successBg
                   : AppColors.dangerBg,
@@ -511,9 +600,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               employee.isCheckedIn
                   ? 'حاضر'
                   : 'غائب',
-              style: TextStyle(
+              style:
+                  TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight:
+                    FontWeight.w600,
                 color: employee.isCheckedIn
                     ? AppColors.success
                     : AppColors.danger,
