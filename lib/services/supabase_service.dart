@@ -1,60 +1,65 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/employee.dart';
 import '../models/dashboard_stats.dart';
 import '../models/attendance_settings.dart';
 
 /// نقطة الاتصال الوحيدة بين التطبيق وقاعدة بيانات Supabase.
-/// باقي الشاشات لا تستدعي Supabase.instance مباشرة أبدًا — تمر من هنا،
-/// حتى لو غيّرنا لاحقًا أسماء الجداول أو المنطق يبقى التغيير في مكان واحد.
-///
-/// الجداول المتوقعة (راجع supabase_schema.sql في جذر المشروع):
-///   - attendance_users(id uuid FK = auth.users.id, full_name, role, job_title)
-///   - attendance_records(user_id, check_in, check_out, coordinates)
-///   - attendance_settings(id = 1, center coordinates, radius, qr_code)
 class SupabaseService {
   SupabaseService._internal();
-  static final SupabaseService instance = SupabaseService._internal();
+
+  static final SupabaseService instance =
+      SupabaseService._internal();
 
   SupabaseClient get _client => Supabase.instance.client;
 
-  // ------------------------------------------------------------------
+  // ================================================================
   // المصادقة
-  // ------------------------------------------------------------------
+  // ================================================================
 
-  /// تسجيل الدخول باسم المستخدم (وليس البريد الإلكتروني).
-  /// نستدعي أولًا دالة SQL email_for_username لإيجاد البريد المقابل
-  /// لاسم المستخدم، ثم نكمل تسجيل الدخول عبر Supabase Auth عاديًا.
+  /// تسجيل الدخول باسم المستخدم.
   Future<Employee> login({
     required String username,
     required String password,
   }) async {
     String? email;
+
     try {
       email = await _client.rpc(
         'email_for_username',
-        params: {'p_username': username.trim()},
+        params: {
+          'p_username': username.trim(),
+        },
       ) as String?;
     } on PostgrestException catch (e) {
       throw ApiException(e.message);
     }
 
     if (email == null || email.isEmpty) {
-      throw ApiException('اسم المستخدم أو كلمة المرور غير صحيحة');
+      throw ApiException(
+        'اسم المستخدم أو كلمة المرور غير صحيحة',
+      );
     }
 
     final AuthResponse res;
+
     try {
       res = await _client.auth.signInWithPassword(
         email: email,
         password: password,
       );
     } on AuthException catch (e) {
-      throw ApiException(_arabicAuthError(e.message));
+      throw ApiException(
+        _arabicAuthError(e.message),
+      );
     }
 
     final user = res.user;
+
     if (user == null) {
-      throw ApiException('اسم المستخدم أو كلمة المرور غير صحيحة');
+      throw ApiException(
+        'اسم المستخدم أو كلمة المرور غير صحيحة',
+      );
     }
 
     return _fetchEmployeeProfile(user.id);
@@ -68,11 +73,14 @@ class SupabaseService {
     return _client.auth.currentSession != null;
   }
 
-  /// يجلب بيانات الموظف الحالي إن كانت هناك جلسة صالحة محفوظة،
-  /// مستخدَم عند فتح التطبيق مباشرة دون المرور بشاشة الدخول.
+  /// الموظف الحالي عند فتح التطبيق.
   Future<Employee?> currentEmployee() async {
     final user = _client.auth.currentUser;
-    if (user == null) return null;
+
+    if (user == null) {
+      return null;
+    }
+
     try {
       return await _fetchEmployeeProfile(user.id);
     } catch (_) {
@@ -80,47 +88,68 @@ class SupabaseService {
     }
   }
 
-  Future<Employee> _fetchEmployeeProfile(String userId) async {
+  Future<Employee> _fetchEmployeeProfile(
+    String userId,
+  ) async {
     final row = await _client
         .from('attendance_users')
         .select()
         .eq('id', userId)
         .single();
 
-    final isCheckedIn = await _hasOpenAttendance(userId);
-    return Employee.fromMap(row, isCheckedIn: isCheckedIn);
+    final isCheckedIn =
+        await _hasOpenAttendance(userId);
+
+    return Employee.fromMap(
+      row,
+      isCheckedIn: isCheckedIn,
+    );
   }
 
-  Future<bool> _hasOpenAttendance(String employeeId) async {
+  Future<bool> _hasOpenAttendance(
+    String employeeId,
+  ) async {
     final rows = await _client
         .from('attendance_records')
         .select('id')
         .eq('user_id', employeeId)
         .isFilter('check_out', null)
         .limit(1);
+
     return (rows as List).isNotEmpty;
   }
 
-  // ------------------------------------------------------------------
+  // ================================================================
   // الحضور والانصراف
-  // ------------------------------------------------------------------
+  // ================================================================
 
   Future<void> checkIn({
     String? qrPayload,
     required double latitude,
     required double longitude,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw ApiException('انتهت الجلسة، سجّل الدخول مجددًا');
+    final userId =
+        _client.auth.currentUser?.id;
+
+    if (userId == null) {
+      throw ApiException(
+        'انتهت الجلسة، سجّل الدخول مجددًا',
+      );
+    }
 
     try {
-      await _client.rpc('attendance_check_in', params: {
-        'p_latitude': latitude,
-        'p_longitude': longitude,
-        'p_qr_payload': qrPayload,
-      });
+      await _client.rpc(
+        'attendance_check_in',
+        params: {
+          'p_latitude': latitude,
+          'p_longitude': longitude,
+          'p_qr_payload': qrPayload,
+        },
+      );
     } on PostgrestException catch (e) {
-      throw ApiException(_arabicDatabaseError(e.message));
+      throw ApiException(
+        _arabicDatabaseError(e.message),
+      );
     }
   }
 
@@ -128,69 +157,165 @@ class SupabaseService {
     required double latitude,
     required double longitude,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw ApiException('انتهت الجلسة، سجّل الدخول مجددًا');
+    final userId =
+        _client.auth.currentUser?.id;
+
+    if (userId == null) {
+      throw ApiException(
+        'انتهت الجلسة، سجّل الدخول مجددًا',
+      );
+    }
 
     try {
-      await _client.rpc('attendance_check_out', params: {
-        'p_latitude': latitude,
-        'p_longitude': longitude,
-      });
+      await _client.rpc(
+        'attendance_check_out',
+        params: {
+          'p_latitude': latitude,
+          'p_longitude': longitude,
+        },
+      );
     } on PostgrestException catch (e) {
-      throw ApiException(_arabicDatabaseError(e.message));
+      throw ApiException(
+        _arabicDatabaseError(e.message),
+      );
     }
   }
 
-  // ------------------------------------------------------------------
+  // ================================================================
   // لوحة تحكم المدير
-  // ------------------------------------------------------------------
+  // ================================================================
 
-  /// يستدعي دالة SQL attendance_dashboard_stats() المعرّفة في
-  /// supabase_attendance_migration.sql.
   Future<DashboardStats> fetchDashboardStats() async {
     try {
-      final result = await _client.rpc('attendance_dashboard_stats');
-      final row = (result as List).first as Map<String, dynamic>;
+      final result = await _client.rpc(
+        'attendance_dashboard_stats',
+      );
+
+      final row =
+          (result as List).first
+              as Map<String, dynamic>;
+
       return DashboardStats.fromJson(row);
     } on PostgrestException catch (e) {
       throw ApiException(e.message);
     }
   }
 
-  Future<List<Employee>> fetchEmployees({String? search}) async {
+  // ================================================================
+  // قائمة الموظفين
+  // ================================================================
+
+  Future<List<Employee>> fetchEmployees({
+    String? search,
+  }) async {
     try {
+      // مهم:
+      // لا نستخدم role هنا لأنه غير موجود في الجدول
+      // حسب قاعدة البيانات الحالية.
       var query = _client
           .from('attendance_users')
           .select()
-          .neq('role', 'admin');
+          .neq(
+            'job_title',
+            'مدير النظام',
+          );
 
-      if (search != null && search.trim().isNotEmpty) {
-        query = query.ilike('full_name', '%${search.trim()}%');
+      if (search != null &&
+          search.trim().isNotEmpty) {
+        final text = search.trim();
+
+        query = query.or(
+          'full_name.ilike.%$text%,'
+          'employee_number.ilike.%$text%',
+        );
       }
 
-      final rows = await query.order('full_name');
+      final rows =
+          await query.order('full_name');
 
-      // نجلب دفعة واحدة كل الموظفين الحاضرين حاليًا (بدون check_out)
-      // لتفادي استعلام منفصل لكل موظف في القائمة.
-      final openAttendance = await _client
-          .from('attendance_records')
-          .select('user_id')
-          .isFilter('check_out', null);
+      // الموظفون الذين لديهم حضور مفتوح حاليًا.
+      final openAttendance =
+          await _client
+              .from('attendance_records')
+              .select('user_id')
+              .isFilter(
+                'check_out',
+                null,
+              );
 
-      final presentIds = (openAttendance as List)
-          .map((r) => r['user_id'].toString())
-          .toSet();
+      final presentIds =
+          (openAttendance as List)
+              .map(
+                (r) =>
+                    r['user_id'].toString(),
+              )
+              .toSet();
 
       return (rows as List)
-          .map((row) => Employee.fromMap(
-                row,
-                isCheckedIn: presentIds.contains(row['id'].toString()),
-              ))
+          .map(
+            (row) => Employee.fromMap(
+              row,
+              isCheckedIn:
+                  presentIds.contains(
+                row['id'].toString(),
+              ),
+            ),
+          )
           .toList();
     } on PostgrestException catch (e) {
       throw ApiException(e.message);
     }
   }
+
+  // ================================================================
+  // تقرير الحضور والانصراف
+  // ================================================================
+
+  /// يجلب جميع الموظفين الذين سجلوا حضورهم في تاريخ معين.
+  ///
+  /// البيانات التي يرجعها التقرير:
+  /// - username
+  /// - full_name
+  /// - job_title
+  /// - attendance_date
+  /// - check_in
+  /// - check_out
+  /// - status
+  Future<List<Map<String, dynamic>>>
+      fetchAttendanceReport(
+    DateTime date,
+  ) async {
+    try {
+      final dateString =
+          '${date.year.toString().padLeft(4, '0')}-'
+          '${date.month.toString().padLeft(2, '0')}-'
+          '${date.day.toString().padLeft(2, '0')}';
+
+      final result = await _client.rpc(
+        'attendance_report',
+        params: {
+          'p_date': dateString,
+        },
+      );
+
+      if (result == null) {
+        return [];
+      }
+
+      return (result as List)
+          .map(
+            (row) =>
+                Map<String, dynamic>.from(row),
+          )
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ApiException(e.message);
+    }
+  }
+
+  // ================================================================
+  // إنشاء موظف
+  // ================================================================
 
   Future<void> createAttendanceUser({
     required String username,
@@ -203,36 +328,53 @@ class SupabaseService {
     String? phone,
   }) async {
     try {
-      final response = await _client.functions.invoke(
+      final response =
+          await _client.functions.invoke(
         'create-attendance-user',
         body: {
           'username': username.trim(),
           'password': password,
           'full_name': fullName.trim(),
-          'employee_number': employeeNumber.trim(),
+          'employee_number':
+              employeeNumber.trim(),
           'job_title': jobTitle,
           'role': role,
-          'department': department?.trim(),
+          'department':
+              department?.trim(),
           'phone': phone?.trim(),
         },
       );
 
-      if (response.status < 200 || response.status >= 300) {
-        throw ApiException('تعذّر إنشاء المستخدم');
+      if (response.status < 200 ||
+          response.status >= 300) {
+        throw ApiException(
+          'تعذّر إنشاء المستخدم',
+        );
       }
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException('تعذّر إنشاء المستخدم: ${e.toString()}');
+      if (e is ApiException) {
+        rethrow;
+      }
+
+      throw ApiException(
+        'تعذّر إنشاء المستخدم: ${e.toString()}',
+      );
     }
   }
 
-  Future<AttendanceSettings> fetchAttendanceSettings() async {
+  // ================================================================
+  // إعدادات الحضور
+  // ================================================================
+
+  Future<AttendanceSettings>
+      fetchAttendanceSettings() async {
     try {
       final row = await _client
           .from('attendance_settings')
           .select()
           .eq('id', 1)
           .single();
+
       return AttendanceSettings.fromMap(row);
     } on PostgrestException catch (e) {
       throw ApiException(e.message);
@@ -241,46 +383,91 @@ class SupabaseService {
     }
   }
 
-  String _arabicAuthError(String message) {
-    if (message.toLowerCase().contains('invalid login credentials')) {
+  // ================================================================
+  // رسائل الأخطاء
+  // ================================================================
+
+  String _arabicAuthError(
+    String message,
+  ) {
+    if (message
+        .toLowerCase()
+        .contains(
+          'invalid login credentials',
+        )) {
       return 'اسم المستخدم أو كلمة المرور غير صحيحة';
     }
+
     return message;
   }
 
-  String _arabicDatabaseError(String message) {
-    final lower = message.toLowerCase();
-    if (lower.contains('open attendance already exists')) {
+  String _arabicDatabaseError(
+    String message,
+  ) {
+    final lower =
+        message.toLowerCase();
+
+    if (lower.contains(
+      'open attendance already exists',
+    )) {
       return 'لديك تسجيل حضور مفتوح بالفعل';
     }
-    if (lower.contains('no open attendance')) {
+
+    if (lower.contains(
+      'no open attendance',
+    )) {
       return 'لا يوجد تسجيل حضور مفتوح لإغلاقه';
     }
-    if (lower.contains('not authenticated')) {
+
+    if (lower.contains(
+      'not authenticated',
+    )) {
       return 'انتهت الجلسة، سجّل الدخول مجددًا';
     }
-    if (lower.contains('not authorized')) {
+
+    if (lower.contains(
+      'not authorized',
+    )) {
       return 'ليس لديك صلاحية لتنفيذ هذا الإجراء';
     }
-    if (lower.contains('invalid attendance qr code')) {
+
+    if (lower.contains(
+      'invalid attendance qr code',
+    )) {
       return 'باركود الحضور غير صحيح';
     }
-    if (lower.contains('outside attendance center range')) {
+
+    if (lower.contains(
+      'outside attendance center range',
+    )) {
       return 'أنت خارج نطاق الإسعاف المركزي';
     }
-    if (lower.contains('attendance user profile is missing')) {
+
+    if (lower.contains(
+      'attendance user profile is missing',
+    )) {
       return 'لا يوجد ملف حضور مرتبط بهذا المستخدم';
     }
-    if (lower.contains('attendance settings are incomplete')) {
+
+    if (lower.contains(
+      'attendance settings are incomplete',
+    )) {
       return 'إعدادات المركز غير مكتملة في Supabase';
     }
+
     return message;
   }
 }
 
+// ================================================================
+// ApiException
+// ================================================================
+
 class ApiException implements Exception {
   final String message;
+
   ApiException(this.message);
+
   @override
   String toString() => message;
 }
