@@ -106,6 +106,9 @@ class _AttendanceScreenState
       _loadSettingsAndLocation();
 
   Future<void> _scanAndCheckIn() async {
+    // لا نفتح الكاميرا إلا بعد نجاح التحقق من موقع الموظف.
+    if (!_canAct) return;
+
     final qrPayload =
         await Navigator.of(context).push<String>(
       MaterialPageRoute(
