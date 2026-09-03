@@ -18,7 +18,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
   void _onScan(Code result) {
     if (_handled || !mounted) return;
 
-    final value = result.text.trim();
+    final value = (result.text ?? '').trim();
 
     if (value.isEmpty) return;
 
@@ -52,7 +52,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
               showFlashlight: true,
             ),
 
-            // إطار تحديد مكان الباركود
             IgnorePointer(
               child: Center(
                 child: Container(
@@ -69,7 +68,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
               ),
             ),
 
-            // تعليمات المسح
             Positioned(
               bottom: 35,
               left: 24,
