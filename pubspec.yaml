@@ -1,81 +1,52 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_zxing/flutter_zxing.dart';
+name: ambulance_attendance
 
-import '../theme/app_theme.dart';
+description: نظام الإسعاف المركزي
 
-/// شاشة مسح الباركود الخاص بنقطة الحضور.
-/// عند نجاح المسح، تُعيد محتوى الكود إلى الشاشة السابقة عبر Navigator.pop.
-class QrScanScreen extends StatefulWidget {
-  const QrScanScreen({super.key});
+publish_to: "none"
 
-  @override
-  State<QrScanScreen> createState() => _QrScanScreenState();
-}
+version: 1.0.0+1
 
-class _QrScanScreenState extends State<QrScanScreen> {
-  bool _handled = false;
+environment:
+  sdk: ">=3.0.0 <4.0.0"
 
-  void _onScan(Code result) {
-    if (_handled || !mounted) return;
+dependencies:
+  flutter:
+    sdk: flutter
 
-    final value = result.text?.trim();
-    if (value == null || value.isEmpty) return;
+  cupertino_icons: ^1.0.6
 
-    _handled = true;
-    Navigator.of(context).pop(value);
-  }
+  # Supabase
+  supabase_flutter: ^2.17.2
 
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          title: const Text('مسح باركود الحضور'),
-        ),
-        body: Stack(
-          children: [
-            ReaderWidget(
-              codeFormat: Format.qrCode,
-              onScan: _onScan,
-              showGallery: false,
-              showToggleCamera: true,
-              showFlashlight: true,
-            ),
-            IgnorePointer(
-              child: Center(
-                child: Container(
-                  width: 240,
-                  height: 240,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.ambulanceRed,
-                      width: 3,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 40,
-              left: 24,
-              right: 24,
-              child: Text(
-                'وجّه الكاميرا نحو باركود نقطة الحضور',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+  # QR Scanner
+  flutter_zxing: ^2.2.0
+
+  # Maps
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.1
+
+  # Location
+  geo: ^1.0.0
+
+  # Open links
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+
+  # App Icon
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "app_icon.png"
