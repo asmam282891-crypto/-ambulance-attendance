@@ -16,7 +16,7 @@ workflows:
           flutter create \
             --project-name ambulance_app \
             --org com.ambulance \
-            --platforms android,web .
+            --platforms android,web --no-pub .
 
       - name: Check icon files
         script: |
