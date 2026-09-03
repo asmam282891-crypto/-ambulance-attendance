@@ -22,7 +22,9 @@ jobs:
           flutter create \
             --project-name ambulance_attendance \
             --org com.ambulance \
-            --platforms android .
+            --platforms android \
+            --no-pub \
+            --force .
 
           sed -i 's/android:label="ambulance_attendance"/android:label="الإسعاف المركزي"/' android/app/src/main/AndroidManifest.xml
 
