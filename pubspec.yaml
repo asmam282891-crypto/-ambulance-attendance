@@ -1,57 +1,81 @@
-name: ambulance_attendance
-description: نظام حضور وانصراف الإسعاف المركزي
-publish_to: 'none'
+import 'package:flutter/material.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
 
-version: 1.0.0+1
+import '../theme/app_theme.dart';
 
-environment:
-  sdk: '>=3.0.0 <4.0.0'
+/// شاشة مسح الباركود الخاص بنقطة الحضور.
+/// عند نجاح المسح، تُعيد محتوى الكود إلى الشاشة السابقة عبر Navigator.pop.
+class QrScanScreen extends StatefulWidget {
+  const QrScanScreen({super.key});
 
-dependencies:
-  flutter:
-    sdk: flutter
+  @override
+  State<QrScanScreen> createState() => _QrScanScreenState();
+}
 
-  cupertino_icons: ^1.0.6
-  google_fonts: ^6.2.1
-  supabase_flutter: ^2.6.0
-  geolocator: ^12.0.0
-  mobile_scanner: ^5.1.1
-  qr_flutter: ^4.1.0
-  provider: ^6.1.2
-  intl: ^0.19.0
+class _QrScanScreenState extends State<QrScanScreen> {
+  bool _handled = false;
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
+  void _onScan(Code result) {
+    if (_handled || !mounted) return;
 
-  flutter_lints: ^4.0.0
-  flutter_launcher_icons: ^0.14.3
-  flutter_native_splash: ^2.4.6
+    final value = result.text?.trim();
+    if (value == null || value.isEmpty) return;
 
-flutter:
-  uses-material-design: true
+    _handled = true;
+    Navigator.of(context).pop(value);
+  }
 
-  assets:
-    - app_icon.png
-    - splash.png
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  web: true
-  image_path: "app_icon.png"
-  remove_alpha_ios: true
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "app_icon.png"
-
-flutter_native_splash:
-  color: "#FFFFFF"
-  image: app_icon.png
-
-  android: true
-  ios: true
-  web: true
-
-  android_12:
-    color: "#FFFFFF"
-    image: app_icon.png
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          title: const Text('مسح باركود الحضور'),
+        ),
+        body: Stack(
+          children: [
+            ReaderWidget(
+              codeFormat: Format.qrCode,
+              onScan: _onScan,
+              showGallery: false,
+              showToggleCamera: true,
+              showFlashlight: true,
+            ),
+            IgnorePointer(
+              child: Center(
+                child: Container(
+                  width: 240,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: AppColors.ambulanceRed,
+                      width: 3,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              left: 24,
+              right: 24,
+              child: Text(
+                'وجّه الكاميرا نحو باركود نقطة الحضور',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
