@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -26,10 +28,6 @@ class _AttendanceReportScreenState
     _loadReport();
   }
 
-  // ================================================================
-  // تحميل التقرير
-  // ================================================================
-
   Future<void> _loadReport() async {
     if (!mounted) return;
 
@@ -39,8 +37,6 @@ class _AttendanceReportScreenState
     });
 
     try {
-      // مهم:
-      // fetchAttendanceReport تستقبل DateTime كوسيط مباشر
       final data = await SupabaseService.instance
           .fetchAttendanceReport(_selectedDate);
 
@@ -60,10 +56,6 @@ class _AttendanceReportScreenState
     }
   }
 
-  // ================================================================
-  // اختيار التاريخ
-  // ================================================================
-
   Future<void> _selectDate() async {
     final selected = await showDatePicker(
       context: context,
@@ -72,7 +64,7 @@ class _AttendanceReportScreenState
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: ui.TextDirection.rtl,
           child: child!,
         );
       },
@@ -87,10 +79,6 @@ class _AttendanceReportScreenState
     await _loadReport();
   }
 
-  // ================================================================
-  // تنسيق الوقت
-  // ================================================================
-
   String _formatTime(dynamic value) {
     if (value == null) return '-';
 
@@ -99,8 +87,7 @@ class _AttendanceReportScreenState
     if (text.isEmpty) return '-';
 
     try {
-      final dateTime =
-          DateTime.parse(text).toLocal();
+      final dateTime = DateTime.parse(text).toLocal();
 
       return DateFormat(
         'hh:mm a',
@@ -111,13 +98,7 @@ class _AttendanceReportScreenState
     }
   }
 
-  // ================================================================
-  // اسم الموظف
-  // ================================================================
-
-  String _getName(
-    Map<String, dynamic> record,
-  ) {
+  String _getName(Map<String, dynamic> record) {
     return (
       record['full_name'] ??
       record['fullName'] ??
@@ -127,13 +108,7 @@ class _AttendanceReportScreenState
     ).toString();
   }
 
-  // ================================================================
-  // الوظيفة
-  // ================================================================
-
-  String _getJobTitle(
-    Map<String, dynamic> record,
-  ) {
+  String _getJobTitle(Map<String, dynamic> record) {
     return (
       record['job_title'] ??
       record['jobTitle'] ??
@@ -142,15 +117,8 @@ class _AttendanceReportScreenState
     ).toString();
   }
 
-  // ================================================================
-  // الحالة
-  // ================================================================
-
-  String _getStatus(
-    Map<String, dynamic> record,
-  ) {
-    final status =
-        record['status']?.toString().trim();
+  String _getStatus(Map<String, dynamic> record) {
+    final status = record['status']?.toString().trim();
 
     if (status == null || status.isEmpty) {
       if (record['check_in'] != null &&
@@ -169,14 +137,10 @@ class _AttendanceReportScreenState
     return status;
   }
 
-  // ================================================================
-  // الواجهة
-  // ================================================================
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -186,10 +150,6 @@ class _AttendanceReportScreenState
         ),
         body: Column(
           children: [
-            // --------------------------------------------------------
-            // اختيار التاريخ
-            // --------------------------------------------------------
-
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 16,
@@ -212,9 +172,7 @@ class _AttendanceReportScreenState
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   IconButton(
                     onPressed: _loadReport,
                     tooltip: 'تحديث التقرير',
@@ -225,11 +183,6 @@ class _AttendanceReportScreenState
                 ],
               ),
             ),
-
-            // --------------------------------------------------------
-            // عنوان اليوم
-            // --------------------------------------------------------
-
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -246,11 +199,6 @@ class _AttendanceReportScreenState
                 ),
               ),
             ),
-
-            // --------------------------------------------------------
-            // التقرير
-            // --------------------------------------------------------
-
             Expanded(
               child: _buildBody(),
             ),
@@ -259,10 +207,6 @@ class _AttendanceReportScreenState
       ),
     );
   }
-
-  // ================================================================
-  // محتوى التقرير
-  // ================================================================
 
   Widget _buildBody() {
     if (_loading) {
@@ -283,9 +227,7 @@ class _AttendanceReportScreenState
                 size: 60,
                 color: Colors.red,
               ),
-
               const SizedBox(height: 16),
-
               const Text(
                 'حدث خطأ أثناء تحميل التقرير',
                 textAlign: TextAlign.center,
@@ -294,16 +236,12 @@ class _AttendanceReportScreenState
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 10),
-
               Text(
                 _error!,
                 textAlign: TextAlign.center,
               ),
-
               const SizedBox(height: 18),
-
               ElevatedButton.icon(
                 onPressed: _loadReport,
                 icon: const Icon(Icons.refresh),
@@ -325,15 +263,12 @@ class _AttendanceReportScreenState
               const AlwaysScrollableScrollPhysics(),
           children: const [
             SizedBox(height: 100),
-
             Icon(
               Icons.event_busy,
               size: 60,
               color: Colors.grey,
             ),
-
             SizedBox(height: 16),
-
             Center(
               child: Text(
                 'لا توجد سجلات حضور لهذا اليوم',
@@ -364,8 +299,7 @@ class _AttendanceReportScreenState
           final record = _records[index];
 
           final name = _getName(record);
-          final jobTitle =
-              _getJobTitle(record);
+          final jobTitle = _getJobTitle(record);
 
           final checkIn =
               _formatTime(record['check_in']);
@@ -392,21 +326,15 @@ class _AttendanceReportScreenState
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
-                  // --------------------------------------------------
-                  // بيانات الموظف
-                  // --------------------------------------------------
-
                   Row(
                     children: [
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 25,
-                        child: const Icon(
+                        child: Icon(
                           Icons.person,
                         ),
                       ),
-
                       const SizedBox(width: 12),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment:
@@ -421,11 +349,9 @@ class _AttendanceReportScreenState
                                     FontWeight.bold,
                               ),
                             ),
-
                             const SizedBox(
                               height: 4,
                             ),
-
                             Text(
                               jobTitle,
                               style: TextStyle(
@@ -438,7 +364,6 @@ class _AttendanceReportScreenState
                           ],
                         ),
                       ),
-
                       Container(
                         padding:
                             const EdgeInsets
@@ -476,17 +401,9 @@ class _AttendanceReportScreenState
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
                   const Divider(),
-
                   const SizedBox(height: 10),
-
-                  // --------------------------------------------------
-                  // الحضور والانصراف
-                  // --------------------------------------------------
-
                   Row(
                     children: [
                       Expanded(
@@ -494,24 +411,18 @@ class _AttendanceReportScreenState
                           icon: Icons.login,
                           title: 'وقت الحضور',
                           value: checkIn,
-                          active:
-                              hasCheckIn,
-                          iconColor:
-                              Colors.green,
+                          active: hasCheckIn,
+                          iconColor: Colors.green,
                         ),
                       ),
-
                       const SizedBox(width: 10),
-
                       Expanded(
                         child: _TimeBox(
                           icon: Icons.logout,
                           title: 'وقت الانصراف',
                           value: checkOut,
-                          active:
-                              hasCheckOut,
-                          iconColor:
-                              Colors.red,
+                          active: hasCheckOut,
+                          iconColor: Colors.red,
                         ),
                       ),
                     ],
@@ -525,10 +436,6 @@ class _AttendanceReportScreenState
     );
   }
 }
-
-// ================================================================
-// صندوق الوقت
-// ================================================================
 
 class _TimeBox extends StatelessWidget {
   final IconData icon;
@@ -565,9 +472,7 @@ class _TimeBox extends StatelessWidget {
                 ? iconColor
                 : Colors.grey,
           ),
-
           const SizedBox(width: 8),
-
           Expanded(
             child: Column(
               crossAxisAlignment:
@@ -580,9 +485,7 @@ class _TimeBox extends StatelessWidget {
                     color: Colors.grey.shade600,
                   ),
                 ),
-
                 const SizedBox(height: 3),
-
                 Text(
                   value,
                   style: TextStyle(
@@ -600,4 +503,4 @@ class _TimeBox extends StatelessWidget {
       ),
     );
   }
-}
+} 
