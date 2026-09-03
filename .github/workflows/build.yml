@@ -19,12 +19,17 @@ jobs:
 
       - name: Create Android platform with permissions
         run: |
+          rm -rf android
+          rm -rf /tmp/ambulance_flutter_platform
+
           flutter create \
             --project-name ambulance_attendance \
             --org com.ambulance \
             --platforms android \
             --no-pub \
-            --force .
+            /tmp/ambulance_flutter_platform
+
+          cp -R /tmp/ambulance_flutter_platform/android ./android
 
           sed -i 's/android:label="ambulance_attendance"/android:label="الإسعاف المركزي"/' android/app/src/main/AndroidManifest.xml
 
