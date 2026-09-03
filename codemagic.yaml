@@ -16,12 +16,14 @@ workflows:
           flutter create \
             --project-name ambulance_app \
             --org com.ambulance \
-            --platforms android,web --no-pub .
+            --platforms android,web \
+            --no-pub .
 
       - name: Check icon files
         script: |
           echo "Checking app_icon.png..."
           ls -lh app_icon.png
+
           echo "Checking splash.png..."
           ls -lh splash.png
 
@@ -41,9 +43,20 @@ workflows:
           ]
 
           position = text.find(">")
-          missing = [permission for permission in permissions if permission not in text]
+
+          missing = [
+              permission
+              for permission in permissions
+              if permission not in text
+          ]
+
           if missing:
-              text = text[:position + 1] + "\n" + "\n".join(missing) + text[position + 1:]
+              text = (
+                  text[:position + 1]
+                  + "\n    "
+                  + "\n    ".join(missing)
+                  + text[position + 1:]
+              )
 
           text = text.replace(
               'android:label="ambulance_app"',
@@ -61,51 +74,35 @@ workflows:
       - name: Generate application icon
         script: |
           dart run flutter_launcher_icons
-          echo "Generated Android launcher icon files:"
+
+          echo "Generated Android launcher icons:"
           find android/app/src/main/res -type f -name 'ic_launcher*' -print
+
           icon_count=$(find android/app/src/main/res -type f -name 'ic_launcher*' | wc -l)
+
           if [ "$icon_count" -eq 0 ]; then
             echo "ERROR: Android launcher icons were not generated"
             exit 1
           fi
 
-          # Force the real app icon in the generated Android manifest.
-          # Codemagic creates the Android platform during this build, so this
-          # prevents the default Flutter icon from surviving in the APK.
-          mkdir -p android/app/src/main/res/drawable
-          cp app_icon.png android/app/src/main/res/drawable/app_icon.png
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path("android/app/src/main/AndroidManifest.xml")
-          text = path.read_text()
-          import re
-
-          text = re.sub(
-              r'android:icon="[^"]+"',
-              'android:icon="@drawable/app_icon"',
-              text,
-              count=1,
-          )
-          text = re.sub(
-              r'android:roundIcon="[^"]+"',
-              'android:roundIcon="@drawable/app_icon"',
-              text,
-              count=1,
-          )
-          text = re.sub(
-              r'android:label="[^"]+"',
-              'android:label="الإسعاف المركزي"',
-              text,
-              count=1,
-          )
-          path.write_text(text)
-          PY
-          grep -q 'android:icon="@drawable/app_icon"' android/app/src/main/AndroidManifest.xml
-
       - name: Generate splash screen
         script: |
           dart run flutter_native_splash:create
+
+      - name: Check Android permissions
+        script: |
+          echo "Checking AndroidManifest.xml..."
+
+          grep -q 'android.permission.CAMERA' \
+            android/app/src/main/AndroidManifest.xml
+
+          grep -q 'android.permission.ACCESS_FINE_LOCATION' \
+            android/app/src/main/AndroidManifest.xml
+
+          grep -q 'android.permission.ACCESS_COARSE_LOCATION' \
+            android/app/src/main/AndroidManifest.xml
+
+          echo "Camera and location permissions are OK."
 
       - name: Build Android APK
         script: |
