@@ -26,7 +26,7 @@ dependencies:
   latlong2: ^0.9.1
 
   # Location / GPS
-  geo: ^1.0.0
+  geo: ^0.3.0
 
   # Open external links
   url_launcher: ^6.3.0
