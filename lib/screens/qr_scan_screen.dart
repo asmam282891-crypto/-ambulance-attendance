@@ -13,10 +13,60 @@ import 'dart:async';
     State<QrScanScreen> createState() => _QrScanScreenState();
     }
 
-    class _QrScanScreenState extends State<QrScanScreen> {
-    MobileScannerController _controller = MobileScannerController();
+    class _QrScanScreenState extends State<QrScanScreen> with WidgetsBindingObserver {
+    MobileScannerController _controller = MobileScannerController(
+      autoStart: false,
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      facing: CameraFacing.back,
+    );
     bool _handled = false;
     bool _retrying = false;
+    bool _starting = false;
+    bool _cameraStarted = false;
+
+    @override
+    void initState() {
+      super.initState();
+      WidgetsBinding.instance.addObserver(this);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_startCamera());
+      });
+    }
+
+    Future<void> _startCamera() async {
+      if (!mounted || _starting || _cameraStarted) return;
+
+      _starting = true;
+      try {
+        await _controller.start();
+        _cameraStarted = true;
+      } catch (_) {
+        // يعرض errorBuilder رسالة الخطأ القادمة من Mobile Scanner.
+      } finally {
+        _starting = false;
+      }
+    }
+
+    @override
+    void didChangeAppLifecycleState(AppLifecycleState state) {
+      if (!mounted) return;
+
+      switch (state) {
+        case AppLifecycleState.resumed:
+          unawaited(_startCamera());
+          break;
+        case AppLifecycleState.inactive:
+        case AppLifecycleState.paused:
+        case AppLifecycleState.hidden:
+          if (_cameraStarted) {
+            _cameraStarted = false;
+            unawaited(_controller.stop());
+          }
+          break;
+        case AppLifecycleState.detached:
+          break;
+      }
+    }
 
     void _onDetect(BarcodeCapture capture) {
       if (_handled || !mounted) return;
@@ -54,10 +104,17 @@ import 'dart:async';
       if (!mounted) return;
 
       setState(() {
-        _controller = MobileScannerController();
+        _controller = MobileScannerController(
+          autoStart: false,
+          detectionSpeed: DetectionSpeed.noDuplicates,
+          facing: CameraFacing.back,
+        );
         _handled = false;
         _retrying = false;
+        _cameraStarted = false;
       });
+
+      unawaited(_startCamera());
     }
 
     String _errorTitle(MobileScannerException exception) {
@@ -153,7 +210,8 @@ import 'dart:async';
 
     @override
     void dispose() {
-      _controller.dispose();
+      WidgetsBinding.instance.removeObserver(this);
+      unawaited(_controller.dispose());
       super.dispose();
     }
 
