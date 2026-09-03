@@ -1,282 +1,201 @@
-import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
 
-    import 'package:flutter/material.dart';
-    import 'package:mobile_scanner/mobile_scanner.dart';
-    import '../theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
-    /// شاشة مسح الباركود الخاص بنقطة الحضور.
-    /// عند نجاح المسح، تُعيد محتوى الكود إلى الشاشة السابقة عبر Navigator.pop.
-    class QrScanScreen extends StatefulWidget {
-    const QrScanScreen({super.key});
+/// شاشة مسح الباركود الخاص بنقطة الحضور.
+/// عند نجاح المسح، تُعيد محتوى الكود إلى الشاشة السابقة.
+class QrScanScreen extends StatefulWidget {
+  const QrScanScreen({super.key});
 
-    @override
-    State<QrScanScreen> createState() => _QrScanScreenState();
+  @override
+  State<QrScanScreen> createState() => _QrScanScreenState();
+}
+
+class _QrScanScreenState extends State<QrScanScreen> {
+  bool _handled = false;
+  bool _cameraError = false;
+  String _errorMessage = '';
+
+  void _onScan(Code result) {
+    if (_handled || !mounted) return;
+
+    if (!result.isValid) {
+      return;
     }
 
-    class _QrScanScreenState extends State<QrScanScreen> with WidgetsBindingObserver {
-    MobileScannerController _controller = MobileScannerController(
-      autoStart: false,
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      facing: CameraFacing.back,
-    );
-    bool _handled = false;
-    bool _retrying = false;
-    bool _starting = false;
-    bool _cameraStarted = false;
+    final value = result.text.trim();
 
-    @override
-    void initState() {
-      super.initState();
-      WidgetsBinding.instance.addObserver(this);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        unawaited(_startCamera());
-      });
+    if (value.isEmpty) {
+      return;
     }
 
-    Future<void> _startCamera() async {
-      if (!mounted || _starting || _cameraStarted) return;
+    _handled = true;
 
-      _starting = true;
-      try {
-        await _controller.start();
-        _cameraStarted = true;
-      } catch (_) {
-        // يعرض errorBuilder رسالة الخطأ القادمة من Mobile Scanner.
-      } finally {
-        _starting = false;
-      }
-    }
+    Navigator.of(context).pop(value);
+  }
 
-    @override
-    void didChangeAppLifecycleState(AppLifecycleState state) {
-      if (!mounted) return;
+  void _onScanFailure(Code result) {
+    if (!mounted || _handled) return;
 
-      switch (state) {
-        case AppLifecycleState.resumed:
-          unawaited(_startCamera());
-          break;
-        case AppLifecycleState.inactive:
-        case AppLifecycleState.paused:
-        case AppLifecycleState.hidden:
-          if (_cameraStarted) {
-            _cameraStarted = false;
-            unawaited(_controller.stop());
-          }
-          break;
-        case AppLifecycleState.detached:
-          break;
-      }
-    }
+    // لا نعرض خطأ لكل إطار لم يتمكن من قراءة QR.
+    // نترك الكاميرا تعمل حتى يظهر الكود الصحيح.
+  }
 
-    void _onDetect(BarcodeCapture capture) {
-      if (_handled || !mounted) return;
+  void _onControllerCreated(
+    CameraController? controller,
+    Exception? error,
+  ) {
+    if (!mounted) return;
 
-      // لا نعتمد على أول عنصر فقط؛ قد تُرجع الكاميرا أكثر من نتيجة
-      // ويكون أول عنصر بلا rawValue بينما تكون النتيجة الصحيحة بعده.
-      final value = capture.barcodes
-          .map((barcode) => barcode.rawValue?.trim())
-          .firstWhere(
-            (rawValue) => rawValue != null && rawValue.isNotEmpty,
-            orElse: () => null,
-          );
-
-      if (value == null || value.isEmpty) return;
-
-      _handled = true;
-      // إيقاف الكاميرا قبل إغلاق الشاشة يمنع تكرار القراءة أو بقاء الكاميرا
-      // مشغلة عند العودة إلى شاشة الحضور.
-      unawaited(_controller.stop());
-      Navigator.of(context).pop(value);
-    }
-
-    Future<void> _retryCamera() async {
-      if (_retrying || !mounted) return;
-
+    if (error != null) {
       setState(() {
-        _retrying = true;
+        _cameraError = true;
+        _errorMessage = error.toString();
       });
-
-      // إنشاء Controller جديد مهم خصوصًا بعد رفض الصلاحية؛ فالـ Controller
-      // القديم يحتفظ بحالة الخطأ ولا يعيد طلب صلاحية الكاميرا مرة أخرى.
-      final previousController = _controller;
-      await previousController.dispose();
-
-      if (!mounted) return;
-
-      setState(() {
-        _controller = MobileScannerController(
-          autoStart: false,
-          detectionSpeed: DetectionSpeed.noDuplicates,
-          facing: CameraFacing.back,
-        );
-        _handled = false;
-        _retrying = false;
-        _cameraStarted = false;
-      });
-
-      unawaited(_startCamera());
     }
+  }
 
-    String _errorTitle(MobileScannerException exception) {
-      switch (exception.errorCode) {
-        case MobileScannerErrorCode.permissionDenied:
-          return 'صلاحية الكاميرا مرفوضة';
-        case MobileScannerErrorCode.unsupported:
-          return 'الكاميرا غير مدعومة';
-        case MobileScannerErrorCode.controllerAlreadyInitialized:
-        case MobileScannerErrorCode.controllerDisposed:
-        case MobileScannerErrorCode.controllerUninitialized:
-        case MobileScannerErrorCode.genericError:
-          return 'تعذّر تشغيل الكاميرا';
-      }
-    }
+  void _retryCamera() {
+    setState(() {
+      _cameraError = false;
+      _errorMessage = '';
+      _handled = false;
+    });
+  }
 
-    String _errorMessage(MobileScannerException exception) {
-      if (exception.errorCode == MobileScannerErrorCode.permissionDenied) {
-        return 'اسمح لتطبيق الإسعاف المركزي باستخدام الكاميرا من إعدادات الهاتف، ثم اضغط إعادة المحاولة.';
-      }
-
-      if (exception.errorCode == MobileScannerErrorCode.unsupported) {
-        return 'هذا الجهاز أو المحاكي لا يوفر كاميرا يمكن استخدامها لمسح الباركود.';
-      }
-
-      return 'تأكد من أن الكاميرا ليست مستخدمة في تطبيق آخر، ثم حاول مرة أخرى.';
-    }
-
-    Widget _buildScannerError(
-      BuildContext context,
-      MobileScannerException exception,
-      Widget? child,
-    ) {
-      return Container(
-        color: Colors.black,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: AppColors.dangerBg,
-                borderRadius: BorderRadius.circular(29),
-              ),
-              child: const Icon(
-                Icons.videocam_off_outlined,
-                color: AppColors.danger,
-                size: 29,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              _errorTitle(exception),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _errorMessage(exception),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
-                height: 1.55,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _retrying ? null : _retryCamera,
-              icon: _retrying
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.refresh, size: 18),
-              label: Text(_retrying ? 'جاري المحاولة...' : 'إعادة المحاولة'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    @override
-    void dispose() {
-      WidgetsBinding.instance.removeObserver(this);
-      unawaited(_controller.dispose());
-      super.dispose();
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      return Directionality(
-        textDirection: TextDirection.rtl,
-        child: Scaffold(
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
           backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            title: const Text('مسح باركود الحضور'),
-          ),
-          body: Stack(
-            children: [
-              // تغيير المفتاح يعيد بناء MobileScanner بالكامل بعد الخطأ،
-              // ويمنع بقاء الحالة القديمة داخل الحزمة.
-              KeyedSubtree(
-                key: ObjectKey(_controller),
-                child: MobileScanner(
-                  controller: _controller,
-                  fit: BoxFit.cover,
-                  onDetect: _onDetect,
-                  errorBuilder: _buildScannerError,
-                  placeholderBuilder: (context, child) => const ColoredBox(
-                    color: Colors.black,
+          foregroundColor: Colors.white,
+          title: const Text('مسح باركود الحضور'),
+          centerTitle: true,
+        ),
+        body: _cameraError
+            ? _buildCameraError()
+            : Stack(
+                fit: StackFit.expand,
+                children: [
+                  ReaderWidget(
+                    key: ValueKey(_cameraError),
+                    codeFormat: Format.qrCode,
+                    lensDirection: CameraLensDirection.back,
+                    resolution: ResolutionPreset.high,
+                    tryHarder: true,
+                    tryRotate: true,
+                    showScannerOverlay: true,
+                    showFlashlight: true,
+                    showToggleCamera: false,
+                    showGallery: false,
+                    scanDelay: const Duration(milliseconds: 500),
+                    scanDelaySuccess: const Duration(milliseconds: 1000),
+                    cropPercent: 0.7,
+                    onScan: _onScan,
+                    onScanFailure: _onScanFailure,
+                    onControllerCreated: _onControllerCreated,
+                  ),
+
+                  // إطار المسح الخاص بالتطبيق
+                  IgnorePointer(
                     child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.ambulanceRed,
+                      child: Container(
+                        width: 240,
+                        height: 240,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.ambulanceRed,
+                            width: 3,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              Center(
-                child: Container(
-                  width: 240,
-                  height: 240,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.ambulanceRed,
-                      width: 3,
+
+                  Positioned(
+                    bottom: 35,
+                    left: 24,
+                    right: 24,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text(
+                        'وجّه الكاميرا نحو باركود نقطة الحضور',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
+                ],
               ),
-              Positioned(
-                bottom: 40,
-                left: 24,
-                right: 24,
-                child: Text(
-                  'وجّه الكاميرا نحو باركود نقطة الحضور',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
+      ),
+    );
+  }
+
+  Widget _buildCameraError() {
+    return Container(
+      color: Colors.black,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.dangerBg,
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: const Icon(
+              Icons.videocam_off_outlined,
+              color: AppColors.danger,
+              size: 32,
+            ),
           ),
-        ),
-      );
-    }
-    }
-    
+          const SizedBox(height: 18),
+          const Text(
+            'تعذّر تشغيل الكاميرا',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'تأكد من السماح للتطبيق باستخدام الكاميرا من إعدادات الهاتف، ثم حاول مرة أخرى.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _retryCamera,
+            icon: const Icon(Icons.refresh),
+            label: const Text('إعادة المحاولة'),
+          ),
+        ],
+      ),
+    );
+  }
+}
