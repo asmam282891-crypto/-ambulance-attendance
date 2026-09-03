@@ -25,10 +25,10 @@ dependencies:
   flutter_map: ^6.1.0
   latlong2: ^0.9.1
 
-  # Location
+  # Location / GPS
   geo: ^1.0.0
 
-  # Open links
+  # Open external links
   url_launcher: ^6.3.0
 
 dev_dependencies:
@@ -40,6 +40,9 @@ dev_dependencies:
   # App Icon
   flutter_launcher_icons: ^0.13.1
 
+  # Splash Screen
+  flutter_native_splash: ^2.4.0
+
 flutter:
   uses-material-design: true
 
@@ -50,3 +53,10 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "app_icon.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "splash.png"
+  android: true
+  ios: false
+  fullscreen: true
