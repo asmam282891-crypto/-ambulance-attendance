@@ -2,22 +2,16 @@
 -- This uses attendance_users, attendance_records, and attendance_settings.
 -- It does not create or modify the unrelated dispatch tables.
 
--- Keep the attendance roles aligned with the add-user screen.
+-- Allow the app to add future job titles without another APK release.
 alter table public.attendance_users
   drop constraint if exists attendance_job_title_check;
 
 alter table public.attendance_users
   add constraint attendance_job_title_check
-  check (job_title = any (array[
-    'طبيب'::text,
-    'ممرض'::text,
-    'ممرضة'::text,
-    'مسعف'::text,
-    'سكرتارية'::text,
-    'سائق'::text,
-    'صيدلي'::text,
-    'مدير النظام'::text
-  ]));
+  check (
+    job_title is not null
+    and char_length(trim(job_title)) between 2 and 100
+  );
 
 -- The login screen uses profiles.username, while the attendance tables use
 -- the Supabase auth user id. The function exposes only the matching email
