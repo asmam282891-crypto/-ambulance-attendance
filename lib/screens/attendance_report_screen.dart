@@ -309,15 +309,16 @@ class _AttendanceReportScreenState
 
           final status =
               _getStatus(record);
-           final isPresent = status == 'حاضر';
-           final isUnscheduled = status == 'غير مجدول';
-           final isCompleted = hasCheckOut || status == 'انصرف';
 
           final hasCheckIn =
               record['check_in'] != null;
 
           final hasCheckOut =
               record['check_out'] != null;
+
+          final isPresent = status == 'حاضر';
+          final isUnscheduled = status == 'غير مجدول';
+          final isCompleted = hasCheckOut || status == 'انصرف';
 
            return Center(
              child: ConstrainedBox(
