@@ -311,6 +311,7 @@ class _AttendanceReportScreenState
               _getStatus(record);
            final isPresent = status == 'حاضر';
            final isUnscheduled = status == 'غير مجدول';
+           final isCompleted = hasCheckOut || status == 'انصرف';
 
           final hasCheckIn =
               record['check_in'] != null;
@@ -381,7 +382,7 @@ class _AttendanceReportScreenState
                         decoration: BoxDecoration(
                            color: isPresent
                                ? Colors.green.withOpacity(0.12)
-                               : isUnscheduled
+                               : isUnscheduled || isCompleted
                                    ? Colors.grey.withOpacity(0.12)
                                    : Colors.red.withOpacity(0.12),
                           borderRadius:
@@ -393,7 +394,7 @@ class _AttendanceReportScreenState
                           style: TextStyle(
                              color: isPresent
                                  ? Colors.green.shade700
-                                 : isUnscheduled
+                                 : isUnscheduled || isCompleted
                                      ? Colors.grey.shade700
                                      : Colors.red.shade700,
                             fontWeight:
