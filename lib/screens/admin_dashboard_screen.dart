@@ -175,10 +175,22 @@ class _AdminDashboardScreenState
             ? const Center(
                 child: CircularProgressIndicator(),
               )
-            : RefreshIndicator(
-                onRefresh: _loadData,
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth >= 900;
+                  final statsColumns =
+                      constraints.maxWidth >= 1100 ? 4 : 2;
+                  final horizontalPadding = isWide ? 32.0 : 20.0;
+
+                  return RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    20,
+                    horizontalPadding,
+                    28,
+                  ),
                   children: [
                     if (_errorMessage != null)
                       Container(
@@ -214,13 +226,14 @@ class _AdminDashboardScreenState
                     // إحصائيات الموظفين
                     // =========================
                     GridView.count(
-                      crossAxisCount: 2,
+                      crossAxisCount: statsColumns,
                       shrinkWrap: true,
                       physics:
                           const NeverScrollableScrollPhysics(),
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 1.3,
+                      childAspectRatio:
+                          statsColumns == 4 ? 1.55 : 1.3,
                       children: [
                         StatCard(
                           emoji: '👨‍⚕️',
@@ -491,7 +504,9 @@ class _AdminDashboardScreenState
                         ),
                       ),
                   ],
-                ),
+                    ),
+                  );
+                },
               ),
       ),
     );
