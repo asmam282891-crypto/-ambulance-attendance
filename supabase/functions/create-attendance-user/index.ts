@@ -5,16 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const allowedJobTitles = new Set([
-  "طبيب",
-  "ممرض",
-  "ممرضة",
-  "مسعف",
-  "سكرتارية",
-  "سائق",
-  "صيدلي",
-  "مدير النظام",
-]);
 const allowedRoles = new Set([
   "doctor",
   "nurse",
@@ -22,6 +12,7 @@ const allowedRoles = new Set([
   "secretary",
   "driver",
   "pharmacist",
+  "employee",
   "admin",
 ]);
 
@@ -83,11 +74,15 @@ Deno.serve(async (request) => {
   }
   if (password.length < 6) return json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, 400);
   if (!fullName || !employeeNumber) return json({ error: "الاسم والرقم الوظيفي مطلوبان" }, 400);
-  if (!allowedJobTitles.has(jobTitle) || !allowedRoles.has(role)) {
-    return json({ error: "المسمى الوظيفي أو الدور غير صالح" }, 400);
+  if (jobTitle.length < 2 || jobTitle.length > 100) {
+    return json({ error: "اسم الوظيفة يجب أن يكون بين حرفين و100 حرف" }, 400);
   }
+  if (!allowedRoles.has(role)) return json({ error: "الدور غير صالح" }, 400);
   if (role === "admin" && jobTitle !== "مدير النظام") {
     return json({ error: "دور المدير يتطلب المسمى مدير النظام" }, 400);
+  }
+  if (jobTitle === "مدير النظام" && role !== "admin") {
+    return json({ error: "مسمى مدير النظام مخصص لدور المدير فقط" }, 400);
   }
 
   const { data: existingUsername } = await adminClient
