@@ -13,6 +13,9 @@ alter table public.attendance_users
     'ممرض'::text,
     'ممرضة'::text,
     'مسعف'::text,
+    'سكرتارية'::text,
+    'سائق'::text,
+    'صيدلي'::text,
     'مدير النظام'::text
   ]));
 
