@@ -6,6 +6,7 @@ class Employee {
   final String role; // 'doctor' | 'nurse' | 'admin' | 'paramedic' | 'secretary' | 'driver' | 'pharmacist'
   final String? jobTitle;
   final String? avatarUrl;
+  final List<int> workDays;
   final bool isCheckedIn;
   final String? checkInTime; // زمن الحضور
 
@@ -15,6 +16,7 @@ class Employee {
     required this.role,
     this.avatarUrl,
     this.jobTitle,
+    this.workDays = const [1, 2, 3, 4, 5, 6, 7],
     this.isCheckedIn = false,
     this.checkInTime,
   });
@@ -47,9 +49,26 @@ class Employee {
       role: map['role'] ?? 'employee',
       jobTitle: map['job_title']?.toString(),
       avatarUrl: map['avatar_url'],
+      workDays: _parseWorkDays(map['work_days']),
       isCheckedIn: isCheckedIn ?? statusFromMap,
       checkInTime: formattedTime,
     );
+  }
+
+  static List<int> _parseWorkDays(dynamic value) {
+    if (value is List) {
+      final days = value
+          .map((day) => int.tryParse(day.toString()))
+          .whereType<int>()
+          .where((day) => day >= 1 && day <= 7)
+          .toSet()
+          .toList()
+        ..sort();
+
+      if (days.isNotEmpty) return days;
+    }
+
+    return const [1, 2, 3, 4, 5, 6, 7];
   }
 
   // دعم للـ fromJson لتطابق الاسم المستخدم في الشاشة
@@ -61,6 +80,7 @@ class Employee {
       'full_name': fullName,
       'role': role,
       'avatar_url': avatarUrl,
+      'work_days': workDays,
       'is_checked_in': isCheckedIn,
       'check_in_time': checkInTime,
     };
@@ -76,6 +96,7 @@ class Employee {
       role: role,
       avatarUrl: avatarUrl,
       jobTitle: jobTitle,
+      workDays: workDays,
       isCheckedIn: isCheckedIn ?? this.isCheckedIn,
       checkInTime: checkInTime ?? this.checkInTime,
     );
