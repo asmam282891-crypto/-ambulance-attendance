@@ -28,6 +28,9 @@ class _AddUserScreenState extends State<AddUserScreen> {
     'ممرض': 'nurse',
     'ممرضة': 'nurse',
     'مسعف': 'paramedic',
+    'سكرتارية': 'secretary',
+    'سائق': 'driver',
+    'صيدلي': 'pharmacist',
     'مدير النظام': 'admin',
   };
 
