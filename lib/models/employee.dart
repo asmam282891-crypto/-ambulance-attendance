@@ -3,7 +3,7 @@
 class Employee {
   final String id;
   final String fullName;
-  final String role; // 'doctor' | 'nurse' | 'admin' | 'paramedic'
+  final String role; // 'doctor' | 'nurse' | 'admin' | 'paramedic' | 'secretary' | 'driver' | 'pharmacist'
   final String? jobTitle;
   final String? avatarUrl;
   final bool isCheckedIn;
@@ -97,6 +97,12 @@ class Employee {
         return 'مدير';
       case 'paramedic':
         return 'مسعف';
+      case 'secretary':
+        return 'سكرتارية';
+      case 'driver':
+        return 'سائق';
+      case 'pharmacist':
+        return 'صيدلي';
       default:
         return 'موظف';
     }
