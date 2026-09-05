@@ -309,6 +309,8 @@ class _AttendanceReportScreenState
 
           final status =
               _getStatus(record);
+           final isPresent = status == 'حاضر';
+           final isUnscheduled = status == 'غير مجدول';
 
           final hasCheckIn =
               record['check_in'] != null;
@@ -377,15 +379,11 @@ class _AttendanceReportScreenState
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: hasCheckOut
-                              ? Colors.grey
-                                  .withOpacity(
-                                  0.12,
-                                )
-                              : Colors.green
-                                  .withOpacity(
-                                  0.12,
-                                ),
+                           color: isPresent
+                               ? Colors.green.withOpacity(0.12)
+                               : isUnscheduled
+                                   ? Colors.grey.withOpacity(0.12)
+                                   : Colors.red.withOpacity(0.12),
                           borderRadius:
                               BorderRadius
                                   .circular(20),
@@ -393,11 +391,11 @@ class _AttendanceReportScreenState
                         child: Text(
                           status,
                           style: TextStyle(
-                            color: hasCheckOut
-                                ? Colors.grey
-                                    .shade700
-                                : Colors.green
-                                    .shade700,
+                             color: isPresent
+                                 ? Colors.green.shade700
+                                 : isUnscheduled
+                                     ? Colors.grey.shade700
+                                     : Colors.red.shade700,
                             fontWeight:
                                 FontWeight.bold,
                             fontSize: 12,
