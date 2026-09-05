@@ -18,9 +18,11 @@ class _AddUserScreenState extends State<AddUserScreen> {
   final _employeeNumberController = TextEditingController();
   final _departmentController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _customJobTitleController = TextEditingController();
 
   String _jobTitle = 'مسعف';
   String _role = 'paramedic';
+  bool _isCustomJobTitle = false;
   bool _isSubmitting = false;
 
   static const _jobTitles = <String, String>{
@@ -31,6 +33,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     'سكرتارية': 'secretary',
     'سائق': 'driver',
     'صيدلي': 'pharmacist',
+    'أخرى': 'employee',
     'مدير النظام': 'admin',
   };
 
@@ -42,6 +45,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     _employeeNumberController.dispose();
     _departmentController.dispose();
     _phoneController.dispose();
+    _customJobTitleController.dispose();
     super.dispose();
   }
 
@@ -50,13 +54,18 @@ class _AddUserScreenState extends State<AddUserScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      final jobTitle = _isCustomJobTitle
+          ? _customJobTitleController.text.trim()
+          : _jobTitle;
+      final role = _isCustomJobTitle ? 'employee' : _role;
+
       await SupabaseService.instance.createAttendanceUser(
         username: _usernameController.text,
         password: _passwordController.text,
         fullName: _fullNameController.text,
         employeeNumber: _employeeNumberController.text,
-        jobTitle: _jobTitle,
-        role: _role,
+        jobTitle: jobTitle,
+        role: role,
         department: _departmentController.text,
         phone: _phoneController.text,
       );
@@ -166,9 +175,27 @@ class _AddUserScreenState extends State<AddUserScreen> {
                         setState(() {
                           _jobTitle = value;
                           _role = _jobTitles[value]!;
+                          _isCustomJobTitle = value == 'أخرى';
                         });
                       },
               ),
+              if (_isCustomJobTitle) ...[
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'اكتب اسم الوظيفة',
+                  controller: _customJobTitleController,
+                  icon: Icons.work_outline,
+                  validator: (value) {
+                    final title = value?.trim() ?? '';
+                    if (title.isEmpty) return 'أدخل اسم الوظيفة';
+                    if (title.length < 2) return 'اسم الوظيفة قصير جدًا';
+                    if (title.length > 100) {
+                      return 'اسم الوظيفة يجب ألا يتجاوز 100 حرف';
+                    }
+                    return null;
+                  },
+                ),
+              ],
               const SizedBox(height: 16),
               AppTextField(
                 label: 'القسم (اختياري)',
