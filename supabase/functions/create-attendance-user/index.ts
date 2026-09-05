@@ -5,8 +5,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const allowedJobTitles = new Set(["طبيب", "ممرض", "ممرضة", "مسعف", "مدير النظام"]);
-const allowedRoles = new Set(["doctor", "nurse", "paramedic", "admin"]);
+const allowedJobTitles = new Set([
+  "طبيب",
+  "ممرض",
+  "ممرضة",
+  "مسعف",
+  "سكرتارية",
+  "سائق",
+  "صيدلي",
+  "مدير النظام",
+]);
+const allowedRoles = new Set([
+  "doctor",
+  "nurse",
+  "paramedic",
+  "secretary",
+  "driver",
+  "pharmacist",
+  "admin",
+]);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
