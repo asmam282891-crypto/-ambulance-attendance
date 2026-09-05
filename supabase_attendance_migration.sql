@@ -13,6 +13,21 @@ alter table public.attendance_users
     and char_length(trim(job_title)) between 2 and 100
   );
 
+alter table public.attendance_users
+  add column if not exists work_days smallint[]
+  not null
+  default array[1, 2, 3, 4, 5, 6, 7]::smallint[];
+
+alter table public.attendance_users
+  drop constraint if exists attendance_work_days_check;
+
+alter table public.attendance_users
+  add constraint attendance_work_days_check
+  check (
+    work_days <@ array[1, 2, 3, 4, 5, 6, 7]::smallint[]
+    and cardinality(work_days) > 0
+  );
+
 -- The login screen uses profiles.username, while the attendance tables use
 -- the Supabase auth user id. The function exposes only the matching email
 -- needed by signInWithPassword.
@@ -298,6 +313,9 @@ begin
     from public.attendance_users
     where role <> 'admin'
       and job_title <> 'مدير النظام'
+      and extract(
+        isodow from (now() at time zone 'Africa/Khartoum')::date
+      )::smallint = any(work_days)
   ),
   present_users as (
     select distinct r.user_id
@@ -320,3 +338,80 @@ $$;
 
 revoke all on function public.attendance_dashboard_stats() from public;
 grant execute on function public.attendance_dashboard_stats() to authenticated;
+
+create or replace function public.attendance_report(p_date date)
+returns table (
+  record_id bigint,
+  user_id uuid,
+  username text,
+  full_name text,
+  job_title text,
+  attendance_date date,
+  check_in timestamptz,
+  check_out timestamptz,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.attendance_is_admin() then
+    raise exception 'not authorized' using errcode = '42501';
+  end if;
+
+  return query
+  with eligible_users as (
+    select
+      u.id,
+      coalesce(p.username, '')::text as username,
+      coalesce(u.full_name, '')::text as full_name,
+      coalesce(u.job_title, '')::text as job_title,
+      coalesce(u.work_days, array[1, 2, 3, 4, 5, 6, 7]::smallint[]) as work_days
+    from public.attendance_users u
+    left join public.profiles p on p.id = u.id
+    where u.role <> 'admin'
+      and u.job_title <> 'مدير النظام'
+  ),
+  daily_records as (
+    select distinct on (r.user_id)
+      r.id,
+      r.user_id,
+      r.attendance_date,
+      r.check_in,
+      r.check_out
+    from public.attendance_records r
+    where r.attendance_date = p_date
+    order by r.user_id, r.check_in desc
+  )
+  select
+    r.id,
+    e.id,
+    e.username,
+    e.full_name,
+    e.job_title,
+    p_date,
+    r.check_in,
+    r.check_out,
+    case
+      when r.user_id is not null and r.check_out is null then 'حاضر'
+      when r.user_id is not null then 'انصرف'
+      when extract(isodow from p_date)::smallint = any(e.work_days)
+        then 'غائب'
+      else 'غير مجدول'
+    end::text
+  from eligible_users e
+  left join daily_records r on r.user_id = e.id
+  order by
+    case
+      when r.user_id is not null and r.check_out is null then 1
+      when r.user_id is not null then 2
+      when extract(isodow from p_date)::smallint = any(e.work_days) then 3
+      else 4
+    end,
+    e.full_name;
+end;
+$$;
+
+revoke all on function public.attendance_report(date) from public;
+grant execute on function public.attendance_report(date) to authenticated;
