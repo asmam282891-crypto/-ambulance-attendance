@@ -150,6 +150,92 @@ class _AdminDashboardScreenState
     );
   }
 
+  Future<void> _editEmployeeSchedule(Employee employee) async {
+    final selected = employee.workDays.toSet();
+    final result = await showDialog<Set<int>>(
+      context: context,
+      builder: (dialogContext) {
+        var draft = {...selected};
+        const days = <MapEntry<int, String>>[
+          MapEntry(1, 'الإثنين'),
+          MapEntry(2, 'الثلاثاء'),
+          MapEntry(3, 'الأربعاء'),
+          MapEntry(4, 'الخميس'),
+          MapEntry(5, 'الجمعة'),
+          MapEntry(6, 'السبت'),
+          MapEntry(7, 'الأحد'),
+        ];
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('أيام عمل ${employee.fullName}'),
+              content: SizedBox(
+                width: 420,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: days
+                      .map(
+                        (day) => FilterChip(
+                          label: Text(day.value),
+                          selected: draft.contains(day.key),
+                          onSelected: (checked) {
+                            setDialogState(() {
+                              if (checked) {
+                                draft.add(day.key);
+                              } else {
+                                draft.remove(day.key);
+                              }
+                            });
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('إلغاء'),
+                ),
+                FilledButton(
+                  onPressed: draft.isEmpty
+                      ? null
+                      : () => Navigator.pop(dialogContext, draft),
+                  child: const Text('حفظ الأيام'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == null || result.isEmpty) return;
+
+    try {
+      final days = result.toList()..sort();
+      await SupabaseService.instance.updateEmployeeWorkDays(
+        employeeId: employee.id,
+        workDays: days,
+      );
+      if (!mounted) return;
+      await _loadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم حفظ أيام العمل ✅')),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -633,6 +719,13 @@ class _AdminDashboardScreenState
               ),
             ),
           ),
+
+           IconButton(
+             onPressed: () => _editEmployeeSchedule(employee),
+             icon: const Icon(Icons.calendar_month_outlined),
+             tooltip: 'تعديل أيام العمل',
+             color: AppColors.navy,
+           ),
         ],
       ),
     );
