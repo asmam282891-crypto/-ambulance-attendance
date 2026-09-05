@@ -13,8 +13,7 @@ class AttendanceReportScreen extends StatefulWidget {
       _AttendanceReportScreenState();
 }
 
-class _AttendanceReportScreenState
-    extends State<AttendanceReportScreen> {
+class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   bool _loading = true;
   String? _error;
 
@@ -37,8 +36,8 @@ class _AttendanceReportScreenState
     });
 
     try {
-      final data = await SupabaseService.instance
-          .fetchAttendanceReport(_selectedDate);
+      final data =
+          await SupabaseService.instance.fetchAttendanceReport(_selectedDate);
 
       if (!mounted) return;
 
@@ -99,35 +98,31 @@ class _AttendanceReportScreenState
   }
 
   String _getName(Map<String, dynamic> record) {
-    return (
-      record['full_name'] ??
-      record['fullName'] ??
-      record['name'] ??
-      record['username'] ??
-      'غير معروف'
-    ).toString();
+    return (record['full_name'] ??
+            record['fullName'] ??
+            record['name'] ??
+            record['username'] ??
+            'غير معروف')
+        .toString();
   }
 
   String _getJobTitle(Map<String, dynamic> record) {
-    return (
-      record['job_title'] ??
-      record['jobTitle'] ??
-      record['role'] ??
-      '-'
-    ).toString();
+    return (record['job_title'] ??
+            record['jobTitle'] ??
+            record['role'] ??
+            '-')
+        .toString();
   }
 
   String _getStatus(Map<String, dynamic> record) {
     final status = record['status']?.toString().trim();
 
     if (status == null || status.isEmpty) {
-      if (record['check_in'] != null &&
-          record['check_out'] == null) {
+      if (record['check_in'] != null && record['check_out'] == null) {
         return 'حاضر';
       }
 
-      if (record['check_in'] != null &&
-          record['check_out'] != null) {
+      if (record['check_in'] != null && record['check_out'] != null) {
         return 'انصرف';
       }
 
@@ -259,8 +254,7 @@ class _AttendanceReportScreenState
       return RefreshIndicator(
         onRefresh: _loadReport,
         child: ListView(
-          physics:
-              const AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: const [
             SizedBox(height: 100),
             Icon(
@@ -283,8 +277,7 @@ class _AttendanceReportScreenState
     return RefreshIndicator(
       onRefresh: _loadReport,
       child: ListView.builder(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(
           16,
           8,
@@ -301,143 +294,125 @@ class _AttendanceReportScreenState
           final name = _getName(record);
           final jobTitle = _getJobTitle(record);
 
-          final checkIn =
-              _formatTime(record['check_in']);
+          final checkIn = _formatTime(record['check_in']);
+          final checkOut = _formatTime(record['check_out']);
 
-          final checkOut =
-              _formatTime(record['check_out']);
+          final status = _getStatus(record);
 
-          final status =
-              _getStatus(record);
-
-          final hasCheckIn =
-              record['check_in'] != null;
-
-          final hasCheckOut =
-              record['check_out'] != null;
+          final hasCheckIn = record['check_in'] != null;
+          final hasCheckOut = record['check_out'] != null;
 
           final isPresent = status == 'حاضر';
           final isUnscheduled = status == 'غير مجدول';
           final isCompleted = hasCheckOut || status == 'انصرف';
 
-           return Center(
-             child: ConstrainedBox(
-               constraints: const BoxConstraints(
-                 maxWidth: 920,
-               ),
-               child: Card(
-                 margin: const EdgeInsets.only(
-                   bottom: 14,
-                 ),
-                 child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Row(
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 920,
+              ),
+              child: Card(
+                margin: const EdgeInsets.only(
+                  bottom: 14,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CircleAvatar(
-                        radius: 25,
-                        child: Icon(
-                          Icons.person,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style:
-                                  const TextStyle(
-                                fontSize: 17,
-                                fontWeight:
-                                    FontWeight.bold,
-                              ),
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 25,
+                            child: Icon(
+                              Icons.person,
                             ),
-                            const SizedBox(
-                              height: 4,
-                            ),
-                            Text(
-                              jobTitle,
-                              style: TextStyle(
-                                color: Colors
-                                    .grey
-                                    .shade600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                           color: isPresent
-                               ? Colors.green.withOpacity(0.12)
-                               : isUnscheduled || isCompleted
-                                   ? Colors.grey.withOpacity(0.12)
-                                   : Colors.red.withOpacity(0.12),
-                          borderRadius:
-                              BorderRadius
-                                  .circular(20),
-                        ),
-                        child: Text(
-                          status,
-                          style: TextStyle(
-                             color: isPresent
-                                 ? Colors.green.shade700
-                                 : isUnscheduled || isCompleted
-                                     ? Colors.grey.shade700
-                                     : Colors.red.shade700,
-                            fontWeight:
-                                FontWeight.bold,
-                            fontSize: 12,
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 4,
+                                ),
+                                Text(
+                                  jobTitle,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isPresent
+                                  ? Colors.green.withOpacity(0.12)
+                                  : isUnscheduled || isCompleted
+                                      ? Colors.grey.withOpacity(0.12)
+                                      : Colors.red.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              status,
+                              style: TextStyle(
+                                color: isPresent
+                                    ? Colors.green.shade700
+                                    : isUnscheduled || isCompleted
+                                        ? Colors.grey.shade700
+                                        : Colors.red.shade700,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _TimeBox(
+                              icon: Icons.login,
+                              title: 'وقت الحضور',
+                              value: checkIn,
+                              active: hasCheckIn,
+                              iconColor: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _TimeBox(
+                              icon: Icons.logout,
+                              title: 'وقت الانصراف',
+                              value: checkOut,
+                              active: hasCheckOut,
+                              iconColor: Colors.red,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _TimeBox(
-                          icon: Icons.login,
-                          title: 'وقت الحضور',
-                          value: checkIn,
-                          active: hasCheckIn,
-                          iconColor: Colors.green,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _TimeBox(
-                          icon: Icons.logout,
-                          title: 'وقت الانصراف',
-                          value: checkOut,
-                          active: hasCheckOut,
-                          iconColor: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      );
+          );
         },
       ),
     );
@@ -475,15 +450,12 @@ class _TimeBox extends StatelessWidget {
           Icon(
             icon,
             size: 22,
-            color: active
-                ? iconColor
-                : Colors.grey,
+            color: active ? iconColor : Colors.grey,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
@@ -498,9 +470,7 @@ class _TimeBox extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: active
-                        ? Colors.black87
-                        : Colors.grey,
+                    color: active ? Colors.black87 : Colors.grey,
                   ),
                 ),
               ],
@@ -510,4 +480,4 @@ class _TimeBox extends StatelessWidget {
       ),
     );
   }
-} 
+}
