@@ -316,11 +316,16 @@ class _AttendanceReportScreenState
           final hasCheckOut =
               record['check_out'] != null;
 
-          return Card(
-            margin: const EdgeInsets.only(
-              bottom: 12,
-            ),
-            child: Padding(
+           return Center(
+             child: ConstrainedBox(
+               constraints: const BoxConstraints(
+                 maxWidth: 920,
+               ),
+               child: Card(
+                 margin: const EdgeInsets.only(
+                   bottom: 14,
+                 ),
+                 child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment:
@@ -430,7 +435,9 @@ class _AttendanceReportScreenState
                 ],
               ),
             ),
-          );
+          ),
+        ),
+      );
         },
       ),
     );
