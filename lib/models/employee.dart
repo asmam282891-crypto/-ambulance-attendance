@@ -104,7 +104,7 @@ class Employee {
       case 'pharmacist':
         return 'صيدلي';
       default:
-        return 'موظف';
+        return jobTitle?.trim().isNotEmpty == true ? jobTitle!.trim() : 'موظف';
     }
   }
 
