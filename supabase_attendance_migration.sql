@@ -55,6 +55,7 @@ alter table public.attendance_records enable row level security;
 
 drop policy if exists "attendance_users_select_self" on public.attendance_users;
 drop policy if exists "attendance_users_select_admin" on public.attendance_users;
+drop policy if exists "attendance_users_update_admin" on public.attendance_users;
 drop policy if exists "attendance_records_select_self" on public.attendance_records;
 drop policy if exists "attendance_records_select_admin" on public.attendance_records;
 drop policy if exists "attendance_settings_select_authenticated"
@@ -90,6 +91,12 @@ create policy "attendance_users_select_admin"
   on public.attendance_users for select
   to authenticated
   using (public.attendance_is_admin());
+
+create policy "attendance_users_update_admin"
+  on public.attendance_users for update
+  to authenticated
+  using (public.attendance_is_admin())
+  with check (public.attendance_is_admin());
 
 create policy "attendance_records_select_self"
   on public.attendance_records for select
