@@ -267,6 +267,20 @@ class SupabaseService {
     }
   }
 
+  Future<void> updateEmployeeWorkDays({
+    required String employeeId,
+    required List<int> workDays,
+  }) async {
+    try {
+      await _client
+          .from('attendance_users')
+          .update({'work_days': workDays})
+          .eq('id', employeeId);
+    } on PostgrestException catch (e) {
+      throw ApiException(e.message);
+    }
+  }
+
   // ================================================================
   // تقرير الحضور والانصراف
   // ================================================================
