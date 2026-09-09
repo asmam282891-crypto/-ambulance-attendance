@@ -41,7 +41,6 @@ class _QrScanScreenState extends State<QrScanScreen> {
           title: Text(
             context.tr('scanAttendanceQr'),
           ),
-          actions: const [LanguageToggleButton()],
         ),
         body: Stack(
           fit: StackFit.expand,
