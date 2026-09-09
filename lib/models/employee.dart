@@ -1,5 +1,7 @@
 /// يمثل هذا النموذج صف الموظف من جدول public.employees في Supabase.
 /// id هنا هو نفسه uuid مستخدم المصادقة (auth.users.id).
+import '../l10n/app_localizations.dart';
+
 class Employee {
   final String id;
   final String fullName;
@@ -125,30 +127,38 @@ class Employee {
       jobTitle?.trim() == 'مدير النظام';
 
   String get roleLabel {
-    if (isAdmin) return 'مدير';
+    final strings = AppLocaleController.instance;
+
+    if (isAdmin) return strings.text('roleAdmin');
 
     switch (role) {
       case 'doctor':
-        return 'طبيب';
+        return strings.text('roleDoctor');
       case 'nurse':
-        return 'ممرض/ة';
+        return strings.text('roleNurse');
       case 'admin':
-        return 'مدير';
+        return strings.text('roleAdmin');
       case 'paramedic':
-        return 'مسعف';
+        return strings.text('roleParamedic');
       case 'secretary':
-        return 'سكرتارية';
+        return strings.text('roleSecretary');
       case 'driver':
-        return 'سائق';
+        return strings.text('roleDriver');
       case 'pharmacist':
-        return 'صيدلي';
+        return strings.text('rolePharmacist');
       default:
-        return jobTitle?.trim().isNotEmpty == true ? jobTitle!.trim() : 'موظف';
+        return jobTitle?.trim().isNotEmpty == true
+            ? jobTitle!.trim()
+            : strings.text('roleEmployee');
     }
   }
 
   String get title {
-    if (role == 'doctor') return 'د. $fullName';
+    if (role == 'doctor') {
+      return AppLocaleController.instance.isArabic
+          ? 'د. $fullName'
+          : 'Dr. $fullName';
+    }
     return fullName;
   }
 }
