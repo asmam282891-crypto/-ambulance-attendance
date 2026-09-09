@@ -671,6 +671,8 @@ class _AdminDashboardScreenState
   Widget _buildEmployeeTile(
     Employee employee,
   ) {
+    final hasCheckedOut = employee.checkOutTime != null;
+
     return Container(
       margin:
           const EdgeInsets.only(bottom: 10),
@@ -734,8 +736,7 @@ class _AdminDashboardScreenState
                           .bodySmall,
                 ),
 
-                if (employee.isCheckedIn &&
-                    employee.checkInTime != null)
+                if (employee.checkInTime != null)
                   Padding(
                     padding:
                         const EdgeInsets.only(
@@ -748,6 +749,25 @@ class _AdminDashboardScreenState
                         fontSize: 11,
                         color:
                             AppColors.success,
+                        fontWeight:
+                            FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                if (employee.checkOutTime != null)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(
+                      top: 2,
+                    ),
+                    child: Text(
+                      '🚪 الانصراف: ${employee.checkOutTime}',
+                      style:
+                          const TextStyle(
+                        fontSize: 11,
+                        color:
+                            AppColors.textSecondary,
                         fontWeight:
                             FontWeight.w500,
                       ),
@@ -767,14 +787,18 @@ class _AdminDashboardScreenState
                 BoxDecoration(
               color: employee.isCheckedIn
                   ? AppColors.successBg
-                  : AppColors.dangerBg,
+                  : hasCheckedOut
+                      ? Colors.grey.shade200
+                      : AppColors.dangerBg,
               borderRadius:
                   BorderRadius.circular(20),
             ),
             child: Text(
               employee.isCheckedIn
                   ? 'حاضر'
-                  : 'غائب',
+                  : hasCheckedOut
+                      ? 'انصرف'
+                      : 'غائب',
               style:
                   TextStyle(
                 fontSize: 12,
@@ -782,7 +806,9 @@ class _AdminDashboardScreenState
                     FontWeight.w600,
                 color: employee.isCheckedIn
                     ? AppColors.success
-                    : AppColors.danger,
+                    : hasCheckedOut
+                        ? AppColors.textSecondary
+                        : AppColors.danger,
               ),
             ),
           ),
