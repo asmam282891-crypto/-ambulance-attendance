@@ -6,7 +6,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import '../l10n/app_localizations.dart';
 import '../services/supabase_service.dart';
 
 class AttendanceReportScreen extends StatefulWidget {
@@ -23,7 +22,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   String? _error;
 
   List<Map<String, dynamic>> _records = [];
-
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -54,7 +52,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       if (!mounted) return;
 
       setState(() {
-        _error = e.toString();
+        _error = 'حدث خطأ أثناء تحميل التقرير: $e';
         _loading = false;
       });
     }
@@ -68,7 +66,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Directionality(
-          textDirection: AppLocaleController.instance.textDirection,
+          textDirection: TextDirection.rtl,
           child: child!,
         );
       },
@@ -85,18 +83,12 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
   String _formatTime(dynamic value) {
     if (value == null) return '-';
-
     final text = value.toString().trim();
-
     if (text.isEmpty) return '-';
 
     try {
       final dateTime = DateTime.parse(text).toLocal();
-
-      return DateFormat(
-        'hh:mm a',
-        'ar',
-      ).format(dateTime);
+      return DateFormat('hh:mm a', 'ar').format(dateTime);
     } catch (_) {
       return text;
     }
@@ -107,7 +99,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
             record['fullName'] ??
             record['name'] ??
             record['username'] ??
-            context.tr('unknown'))
+            'غير معروف')
         .toString();
   }
 
@@ -124,13 +116,11 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
     if (status == null || status.isEmpty) {
       if (record['check_in'] != null && record['check_out'] == null) {
-        return context.tr('present');
+        return 'حاضر';
       }
-
       if (record['check_in'] != null && record['check_out'] != null) {
-        return context.tr('departed');
+        return 'انصرف';
       }
-
       return '-';
     }
 
@@ -138,17 +128,17 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       case 'present':
       case 'checked_in':
       case 'حاضر':
-        return context.tr('present');
+        return 'حاضر';
       case 'checked_out':
       case 'departed':
       case 'انصرف':
-        return context.tr('departed');
+        return 'انصرف';
       case 'absent':
       case 'غائب':
-        return context.tr('absentStatus');
+        return 'غائب';
       case 'unscheduled':
       case 'غير مجدول':
-        return context.tr('unscheduled');
+        return 'غير مجدول';
       default:
         return status;
     }
@@ -159,14 +149,14 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
     if (_loading) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('waitLoading'))),
+        const SnackBar(content: Text('يرجى الانتظار لحين اكتمال التحميل')),
       );
       return;
     }
 
     if (_records.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('noDataPrint'))),
+        const SnackBar(content: Text('لا توجد بيانات للطباعة')),
       );
       return;
     }
@@ -174,20 +164,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     setState(() {
       _printing = true;
     });
-
-    final centralSystemText = context.tr('centralSystem');
-    final reportTitleText = context.tr('reportTitle');
-    final recordsCountText = context.tr(
-      'recordsCount',
-      {'count': '${_records.length}'},
-    );
-    final statusHeader = context.tr('status');
-    final checkOutHeader = context.tr('checkOutTime');
-    final checkInHeader = context.tr('checkInTime');
-    final jobTitleHeader = context.tr('jobTitle');
-    final nameHeader = context.tr('employeeName');
-    final printFailedTemplate = (Object error) =>
-        context.tr('printFailed', {'error': '$error'});
 
     try {
       final regularFont = await PdfGoogleFonts.amiriRegular();
@@ -215,14 +191,12 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
           ),
           build: (pw.Context pdfContext) => [
             pw.Directionality(
-              textDirection: AppLocaleController.instance.isArabic
-                  ? pw.TextDirection.rtl
-                  : pw.TextDirection.ltr,
+              textDirection: pw.TextDirection.rtl,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                 children: [
                   pw.Text(
-                    centralSystemText,
+                    'الإسعاف المركزي',
                     textAlign: pw.TextAlign.center,
                     style: pw.TextStyle(
                       fontSize: 20,
@@ -231,24 +205,24 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   ),
                   pw.SizedBox(height: 6),
                   pw.Text(
-                    '$reportTitleText — $reportDate',
+                    'تقرير الحضور واليومي — $reportDate',
                     textAlign: pw.TextAlign.center,
                     style: const pw.TextStyle(fontSize: 14),
                   ),
                   pw.SizedBox(height: 18),
                   pw.Text(
-                    recordsCountText,
+                    'عدد السجلات: ${_records.length}',
                     textAlign: pw.TextAlign.right,
                     style: const pw.TextStyle(fontSize: 11),
                   ),
                   pw.SizedBox(height: 8),
                   pw.Table.fromTextArray(
                     headers: [
-                      statusHeader,
-                      checkOutHeader,
-                      checkInHeader,
-                      jobTitleHeader,
-                      nameHeader,
+                      'الحالة',
+                      'وقت الانصراف',
+                      'وقت الحضور',
+                      'المسمى الوظيفي',
+                      'اسم الموظف',
                     ],
                     data: rows,
                     headerStyle: pw.TextStyle(
@@ -301,7 +275,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(printFailedTemplate(e)),
+          content: Text('فشلت عملية الطباعة: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -317,21 +291,24 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: AppLocaleController.instance.textDirection,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(context.tr('reportTitle')),
+          title: const Text('تقرير الحضور واليومي'),
           centerTitle: true,
+          backgroundColor: const Color(0xFFD32F2F),
+          foregroundColor: Colors.white,
           actions: [
             IconButton(
               onPressed: _printing ? null : _printReport,
-              tooltip: context.tr('printReport'),
+              tooltip: 'طباعة التقرير',
               icon: _printing
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
+                        color: Colors.white,
                       ),
                     )
                   : const Icon(Icons.print_outlined),
@@ -356,7 +333,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   const SizedBox(width: 10),
                   IconButton(
                     onPressed: _loadReport,
-                    tooltip: context.tr('refreshReport'),
+                    tooltip: 'تحديث التقرير',
                     icon: const Icon(Icons.refresh),
                   ),
                 ],
@@ -367,10 +344,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  context.tr(
-                    'reportDay',
-                    {'date': DateFormat('yyyy/MM/dd').format(_selectedDate)},
-                  ),
+                  'تقرير يوم: ${DateFormat('yyyy/MM/dd').format(_selectedDate)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -387,7 +361,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+      );
     }
 
     if (_error != null) {
@@ -399,10 +375,10 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
             children: [
               const Icon(Icons.error_outline, size: 60, color: Colors.red),
               const SizedBox(height: 16),
-              Text(
-                context.tr('reportLoadError'),
+              const Text(
+                'حدث خطأ أثناء تحميل التقرير',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
                 ),
@@ -413,7 +389,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
               ElevatedButton.icon(
                 onPressed: _loadReport,
                 icon: const Icon(Icons.refresh),
-                label: Text(context.tr('retry')),
+                label: const Text('إعادة المحاولة'),
               ),
             ],
           ),
@@ -426,13 +402,13 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         onRefresh: _loadReport,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            const SizedBox(height: 100),
-            const Icon(Icons.event_busy, size: 60, color: Colors.grey),
-            const SizedBox(height: 16),
+          children: const [
+            SizedBox(height: 100),
+            Icon(Icons.event_busy, size: 60, color: Colors.grey),
+            SizedBox(height: 16),
             Center(
               child: Text(
-                context.tr('noRecordsToday'),
+                'لا توجد سجلات حضور لهذا اليوم',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -461,10 +437,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
           final hasCheckIn = record['check_in'] != null;
           final hasCheckOut = record['check_out'] != null;
 
-          final isPresent = status == context.tr('present');
-          final isUnscheduled = status == context.tr('unscheduled');
-          final isCompleted =
-              hasCheckOut || status == context.tr('departed');
+          final isPresent = status == 'حاضر';
+          final isUnscheduled = status == 'غير مجدول';
+          final isCompleted = hasCheckOut || status == 'انصرف';
 
           return Center(
             child: ConstrainedBox(
@@ -541,7 +516,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                           Expanded(
                             child: _TimeBox(
                               icon: Icons.login,
-                              title: context.tr('checkInTime'),
+                              title: 'وقت الحضور',
                               value: checkIn,
                               active: hasCheckIn,
                               iconColor: Colors.green,
@@ -551,7 +526,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                           Expanded(
                             child: _TimeBox(
                               icon: Icons.logout,
-                              title: context.tr('checkOutTime'),
+                              title: 'وقت الانصراف',
                               value: checkOut,
                               active: hasCheckOut,
                               iconColor: Colors.red,
