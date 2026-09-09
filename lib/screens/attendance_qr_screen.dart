@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../models/attendance_settings.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class AttendanceQrScreen extends StatefulWidget {
 const AttendanceQrScreen({super.key});
@@ -55,11 +56,12 @@ try {
 @override
 Widget build(BuildContext context) {
 return Directionality(
-textDirection: TextDirection.rtl,
+ textDirection: AppLocaleController.instance.textDirection,
 child: Scaffold(
 appBar: AppBar(
-title: const Text('باركود الموظفين'),
+ title: Text(context.tr('qrEmployees')),
 centerTitle: true,
+ actions: const [LanguageToggleButton()],
 ),
 body: _buildBody(),
 ),
@@ -77,7 +79,7 @@ if (_error != null) {
   return _MessageView(
     icon: Icons.error_outline,
     message: _error!,
-    actionLabel: 'إعادة المحاولة',
+    actionLabel: context.tr('retry'),
     onAction: _loadSettings,
   );
 }
@@ -86,9 +88,9 @@ final settings = _settings;
 final value = settings?.qrCode.trim() ?? '';
 
 if (settings == null || value.isEmpty) {
-  return const _MessageView(
+  return _MessageView(
     icon: Icons.qr_code_2,
-    message: 'لم يتم ضبط باركود نقطة الحضور في Supabase',
+    message: context.tr('qrMissing'),
   );
 }
 
@@ -115,8 +117,8 @@ return RefreshIndicator(
 
       const SizedBox(height: 6),
 
-      const Text(
-        'باركود واحد مشترك لجميع الموظفين لتسجيل الحضور',
+       Text(
+         context.tr('sharedQrDescription'),
         textAlign: TextAlign.center,
         style: TextStyle(
           color: AppColors.textSecondary,
@@ -150,8 +152,8 @@ return RefreshIndicator(
 
       const SizedBox(height: 18),
 
-      const Text(
-        'اطبع هذا الباركود وضعه عند نقطة الحضور. يجب أن يكون واضحًا وبحجم مناسب حتى تتمكن كاميرات الموظفين من قراءته.',
+       Text(
+         context.tr('qrPrintInstructions'),
         textAlign: TextAlign.center,
         style: TextStyle(
           color: AppColors.textSecondary,
@@ -164,7 +166,7 @@ return RefreshIndicator(
       OutlinedButton.icon(
         onPressed: _loadSettings,
         icon: const Icon(Icons.refresh),
-        label: const Text('تحديث الباركود'),
+         label: Text(context.tr('updateQr')),
       ),
     ],
   ),
