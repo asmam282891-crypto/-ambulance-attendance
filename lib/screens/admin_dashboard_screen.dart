@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import '../models/dashboard_stats.dart';
 import '../models/employee.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/stat_card.dart';
 
 import 'add_user_screen.dart';
 import 'attendance_report_screen.dart';
@@ -25,7 +23,6 @@ class _AdminDashboardScreenState
     extends State<AdminDashboardScreen> {
   final _searchController = TextEditingController();
 
-  DashboardStats _stats = DashboardStats.empty();
   List<Employee> _employees = [];
 
   bool _isLoading = true;
@@ -56,16 +53,13 @@ class _AdminDashboardScreenState
     });
 
     try {
-      final results = await Future.wait([
-        SupabaseService.instance.fetchDashboardStats(),
-        SupabaseService.instance.fetchEmployees(),
-      ]);
+      final employees =
+          await SupabaseService.instance.fetchEmployees();
 
       if (!mounted) return;
 
       setState(() {
-        _stats = results[0] as DashboardStats;
-        _employees = results[1] as List<Employee>;
+        _employees = employees;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -264,8 +258,6 @@ class _AdminDashboardScreenState
             : LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth >= 900;
-                  final statsColumns =
-                      constraints.maxWidth >= 1100 ? 4 : 2;
                   final horizontalPadding = isWide ? 32.0 : 20.0;
 
                   return RefreshIndicator(
@@ -309,64 +301,7 @@ class _AdminDashboardScreenState
                       ),
 
                     // =========================
-                    // إحصائيات الموظفين
-                    // =========================
-                    GridView.count(
-                      crossAxisCount: statsColumns,
-                      shrinkWrap: true,
-                      physics:
-                          const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio:
-                          statsColumns == 4 ? 1.55 : 1.3,
-                      children: [
-                        StatCard(
-                          emoji: '👨‍⚕️',
-                          label: 'الأطباء',
-                          value:
-                              _stats.doctorsCount,
-                          color:
-                              AppColors.navy,
-                          backgroundColor:
-                              AppColors.navy
-                                  .withOpacity(0.08),
-                        ),
-                        StatCard(
-                          emoji: '👩‍⚕️',
-                          label: 'الممرضين',
-                          value:
-                              _stats.nursesCount,
-                          color:
-                              AppColors.navySoft,
-                          backgroundColor:
-                              AppColors.navySoft
-                                  .withOpacity(0.08),
-                        ),
-                        StatCard(
-                          emoji: '✅',
-                          label: 'الحاضرون',
-                          value:
-                              _stats.presentCount,
-                          color:
-                              AppColors.success,
-                          backgroundColor:
-                              AppColors.successBg,
-                        ),
-                        StatCard(
-                          emoji: '❌',
-                          label: 'الغائبون',
-                          value:
-                              _stats.absentCount,
-                          color:
-                              AppColors.danger,
-                          backgroundColor:
-                              AppColors.dangerBg,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 8),
 
                     Text(
                       'إدارة الموظفين',
