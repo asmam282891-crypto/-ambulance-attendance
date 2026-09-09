@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 /// شاشة مسح باركود نقطة الحضور.
 /// عند نجاح المسح يتم إرجاع محتوى الباركود للشاشة السابقة.
@@ -30,16 +31,17 @@ class _QrScanScreenState extends State<QrScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
           centerTitle: true,
-          title: const Text(
-            'مسح باركود الحضور',
+          title: Text(
+            context.tr('scanAttendanceQr'),
           ),
+          actions: const [LanguageToggleButton()],
         ),
         body: Stack(
           fit: StackFit.expand,
@@ -81,8 +83,8 @@ class _QrScanScreenState extends State<QrScanScreen> {
                   color: Colors.black.withOpacity(0.65),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Text(
-                  'وجّه الكاميرا نحو باركود نقطة الحضور',
+                child: Text(
+                  context.tr('scanInstruction'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
