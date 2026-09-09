@@ -237,19 +237,27 @@ class SupabaseService {
       final openAttendance =
           await _client
               .from('attendance_records')
-              .select('user_id')
+              .select('user_id, check_in')
               .isFilter(
                 'check_out',
                 null,
               );
 
-      final presentIds =
-          (openAttendance as List)
-              .map(
-                (r) =>
-                    r['user_id'].toString(),
-              )
-              .toSet();
+      final checkInTimes = <String, String>{};
+      for (final record in (openAttendance as List)) {
+        final userId = record['user_id']?.toString();
+        final rawCheckIn = record['check_in'];
+        if (userId == null || rawCheckIn == null) continue;
+
+        final dateTime =
+            DateTime.tryParse(rawCheckIn.toString())?.toLocal();
+        if (dateTime != null) {
+          checkInTimes[userId] =
+              '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        }
+      }
+
+      final presentIds = checkInTimes.keys.toSet();
 
       return (rows as List)
           .map(
@@ -259,6 +267,7 @@ class SupabaseService {
                   presentIds.contains(
                 row['id'].toString(),
               ),
+              checkInTime: checkInTimes[row['id'].toString()],
             ),
           )
           .toList();
