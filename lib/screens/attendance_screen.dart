@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -7,6 +5,7 @@ import '../models/employee.dart';
 import '../services/supabase_service.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'qr_scan_screen.dart';
 import 'login_screen.dart';
 
@@ -160,7 +159,10 @@ class _AttendanceScreenState
         _checkOutTime = null;
 
         _feedback =
-            'تم تسجيل حضور ${widget.employee.title} بنجاح ✅\nأنت في الخدمة';
+            context.tr(
+              'checkInSuccess',
+              {'name': widget.employee.title},
+            );
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -173,7 +175,7 @@ class _AttendanceScreenState
 
       setState(() {
         _feedback =
-            'تعذّر تسجيل الحضور، حاول مجددًا';
+            context.tr('checkInFailed');
       });
     } finally {
       if (mounted) {
@@ -211,7 +213,7 @@ class _AttendanceScreenState
         _checkOutTime = formattedTime;
 
         _feedback =
-            'تم تسجيل الانصراف بنجاح 👋';
+            context.tr('checkOutSuccess');
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -224,7 +226,7 @@ class _AttendanceScreenState
 
       setState(() {
         _feedback =
-            'تعذّر تسجيل الانصراف، حاول مجددًا';
+            context.tr('checkOutFailed');
       });
     } finally {
       if (mounted) {
@@ -257,7 +259,7 @@ class _AttendanceScreenState
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: ui.TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
           title: Row(
@@ -270,18 +272,19 @@ class _AttendanceScreenState
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 10),
-              const Text('الإسعاف المركزي'),
+              Text(context.tr('centralAmbulance')),
             ],
           ),
           centerTitle: true,
           actions: [
+            const LanguageToggleButton(),
             IconButton(
               onPressed: _logout,
               icon: const Icon(
                 Icons.logout,
                 size: 20,
               ),
-              tooltip: 'تسجيل الخروج',
+              tooltip: context.tr('logout'),
             ),
           ],
         ),
@@ -292,7 +295,10 @@ class _AttendanceScreenState
                 const EdgeInsets.all(20),
             children: [
               Text(
-                'مرحبًا ${widget.employee.title} 👋',
+                context.tr(
+                  'welcome',
+                  {'name': widget.employee.title},
+                ),
                 style: Theme.of(context)
                     .textTheme
                     .headlineMedium,
@@ -342,9 +348,7 @@ class _AttendanceScreenState
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'مسح باركود الحضور',
-                        ),
+                        : Text(context.tr('scanCheckIn')),
                 ),
               ] else ...[
                 ElevatedButton(
@@ -367,9 +371,7 @@ class _AttendanceScreenState
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'تسجيل الانصراف',
-                        ),
+                        : Text(context.tr('checkOut')),
                 ),
               ],
             ],
@@ -417,10 +419,10 @@ class _AttendanceScreenState
               children: [
                 Text(
                   _isCheckedIn
-                      ? 'أنت في الخدمة ✅'
+                        ? context.tr('inService')
                       : _checkOutTime != null
-                          ? 'تم تسجيل الانصراف ✅'
-                          : 'الحالة: لم تسجل الحضور',
+                            ? context.tr('checkedOut')
+                            : context.tr('notChecked'),
                   style: TextStyle(
                     fontWeight:
                         FontWeight.bold,
@@ -437,7 +439,7 @@ class _AttendanceScreenState
                       top: 2,
                     ),
                     child: Text(
-                      '⏰ وقت الحضور: $_checkInTime',
+                      '⏰ ${context.tr('checkInTime')}: $_checkInTime',
                       style:
                           const TextStyle(
                         fontSize: 13,
@@ -454,7 +456,7 @@ class _AttendanceScreenState
                       top: 2,
                     ),
                     child: Text(
-                      '⏱️ وقت الانصراف: $_checkOutTime',
+                      '⏱️ ${context.tr('checkOutTime')}: $_checkOutTime',
                       style:
                           const TextStyle(
                         fontSize: 13,
@@ -509,8 +511,7 @@ class _AttendanceScreenState
 
     switch (_locationState) {
       case _LocationState.checking:
-        text =
-            'جاري تحديد موقعك...';
+        text = context.tr('checkingLocation');
         color =
             AppColors.textSecondary;
         bg = AppColors.border
@@ -520,8 +521,7 @@ class _AttendanceScreenState
         break;
 
       case _LocationState.inRange:
-        text =
-            'داخل نطاق الإسعاف المركزي';
+        text = context.tr('insideRange');
         color =
             AppColors.success;
         bg =
@@ -531,8 +531,7 @@ class _AttendanceScreenState
         break;
 
       case _LocationState.outOfRange:
-        text =
-            'خارج نطاق المركز، لا يمكن تسجيل الحضور';
+        text = context.tr('outsideRange');
         color =
             AppColors.danger;
         bg =
@@ -542,8 +541,7 @@ class _AttendanceScreenState
         break;
 
       case _LocationState.error:
-        text =
-            'تعذّر تحديد الموقع، تأكد من تفعيل خدمة الموقع';
+        text = context.tr('locationError');
         color =
             AppColors.warning;
         bg = AppColors.dangerBg
