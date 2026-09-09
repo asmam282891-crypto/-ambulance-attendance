@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/employee.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 import 'add_user_screen.dart';
 import 'attendance_report_screen.dart';
@@ -71,7 +72,7 @@ class _AdminDashboardScreenState
       if (!mounted) return;
 
       setState(() {
-        _errorMessage = 'تعذّر تحميل بيانات اللوحة';
+        _errorMessage = context.tr('reportLoadError');
       });
     } finally {
       if (mounted) {
@@ -150,20 +151,25 @@ class _AdminDashboardScreenState
       context: context,
       builder: (dialogContext) {
         var draft = {...selected};
-        const days = <MapEntry<int, String>>[
-          MapEntry(1, 'الإثنين'),
-          MapEntry(2, 'الثلاثاء'),
-          MapEntry(3, 'الأربعاء'),
-          MapEntry(4, 'الخميس'),
-          MapEntry(5, 'الجمعة'),
-          MapEntry(6, 'السبت'),
-          MapEntry(7, 'الأحد'),
+        final days = <MapEntry<int, String>>[
+          MapEntry(1, context.tr('monday')),
+          MapEntry(2, context.tr('tuesday')),
+          MapEntry(3, context.tr('wednesday')),
+          MapEntry(4, context.tr('thursday')),
+          MapEntry(5, context.tr('friday')),
+          MapEntry(6, context.tr('saturday')),
+          MapEntry(7, context.tr('sunday')),
         ];
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('أيام عمل ${employee.fullName}'),
+              title: Text(
+                context.tr(
+                  'workDaysFor',
+                  {'name': employee.fullName},
+                ),
+              ),
               content: SizedBox(
                 width: 420,
                 child: Wrap(
@@ -191,13 +197,13 @@ class _AdminDashboardScreenState
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('إلغاء'),
+                  child: Text(context.tr('cancel')),
                 ),
                 FilledButton(
                   onPressed: draft.isEmpty
                       ? null
                       : () => Navigator.pop(dialogContext, draft),
-                  child: const Text('حفظ الأيام'),
+                   child: Text(context.tr('saveDays')),
                 ),
               ],
             );
@@ -217,7 +223,7 @@ class _AdminDashboardScreenState
       if (!mounted) return;
       await _loadData();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حفظ أيام العمل ✅')),
+        SnackBar(content: Text(context.tr('saveDaysSuccess'))),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -233,21 +239,20 @@ class _AdminDashboardScreenState
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'لوحة تحكم المدير 👨‍💼',
-          ),
+          title: Text(context.tr('adminDashboard')),
           centerTitle: true,
           actions: [
+            const LanguageToggleButton(),
             IconButton(
               onPressed: _logout,
               icon: const Icon(
                 Icons.logout,
                 size: 20,
               ),
-              tooltip: 'تسجيل الخروج',
+               tooltip: context.tr('logout'),
             ),
           ],
         ),
@@ -304,7 +309,7 @@ class _AdminDashboardScreenState
                     const SizedBox(height: 8),
 
                     Text(
-                      'إدارة الموظفين',
+                      context.tr('employeeManagement'),
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge,
@@ -341,9 +346,7 @@ class _AdminDashboardScreenState
                                   .person_add_alt_1,
                               size: 18,
                             ),
-                            label: const Text(
-                              'إضافة موظف',
-                            ),
+                              label: Text(context.tr('addEmployee')),
                             style:
                                 OutlinedButton.styleFrom(
                               minimumSize:
@@ -383,9 +386,7 @@ class _AdminDashboardScreenState
                                   .qr_code_scanner,
                               size: 22,
                             ),
-                            label: const Text(
-                              'مسح الباركود',
-                            ),
+                             label: Text(context.tr('scanBarcode')),
                             style:
                                 OutlinedButton.styleFrom(
                               minimumSize:
@@ -415,7 +416,7 @@ class _AdminDashboardScreenState
                       child: OutlinedButton.icon(
                         onPressed: _openAttendanceQr,
                         icon: const Icon(Icons.qr_code_2, size: 22),
-                        label: const Text('عرض باركود الموظفين للطباعة'),
+                         label: Text(context.tr('employeeQrPrint')),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
                           foregroundColor: AppColors.navy,
@@ -440,8 +441,8 @@ class _AdminDashboardScreenState
                               .assignment_outlined,
                           size: 23,
                         ),
-                        label: const Text(
-                          'سجل الحضور والانصراف',
+                         label: Text(
+                           context.tr('attendanceReport'),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight:
@@ -486,10 +487,9 @@ class _AdminDashboardScreenState
                           _scheduleEmployeeSearch,
                       textAlign:
                           TextAlign.right,
-                      decoration:
-                          const InputDecoration(
-                        hintText:
-                            'البحث عن موظف...',
+                       decoration:
+                           InputDecoration(
+                         hintText: context.tr('searchEmployee'),
                         prefixIcon:
                             Icon(
                           Icons.search,
@@ -505,7 +505,7 @@ class _AdminDashboardScreenState
                     // =========================
                     if (_presentEmployees.isNotEmpty) ...[
                       _buildEmployeeSectionHeader(
-                        title: 'الحاضرون الآن',
+                         title: context.tr('presentNow'),
                         count: _presentEmployees.length,
                         color: AppColors.success,
                       ),
@@ -515,7 +515,7 @@ class _AdminDashboardScreenState
                     if (_absentEmployees.isNotEmpty) ...[
                       const SizedBox(height: 14),
                       _buildEmployeeSectionHeader(
-                        title: 'غير الحاضرين',
+                         title: context.tr('absent'),
                         count: _absentEmployees.length,
                         color: AppColors.danger,
                       ),
@@ -530,7 +530,7 @@ class _AdminDashboardScreenState
                           vertical: 32,
                         ),
                         child: Text(
-                          'لا يوجد موظفون مطابقون للبحث',
+                           context.tr('noEmployees'),
                           textAlign:
                               TextAlign.center,
                           style:
@@ -678,7 +678,7 @@ class _AdminDashboardScreenState
                       top: 2,
                     ),
                     child: Text(
-                      '⏰ الحضور: ${employee.checkInTime}',
+                       '⏰ ${context.tr('checkInLabel')}: ${employee.checkInTime}',
                       style:
                           const TextStyle(
                         fontSize: 11,
@@ -697,7 +697,7 @@ class _AdminDashboardScreenState
                       top: 2,
                     ),
                     child: Text(
-                      '🚪 الانصراف: ${employee.checkOutTime}',
+                       '🚪 ${context.tr('checkOutLabel')}: ${employee.checkOutTime}',
                       style:
                           const TextStyle(
                         fontSize: 11,
@@ -730,10 +730,10 @@ class _AdminDashboardScreenState
             ),
             child: Text(
               employee.isCheckedIn
-                  ? 'حاضر'
+                   ? context.tr('present')
                   : hasCheckedOut
-                      ? 'انصرف'
-                      : 'غائب',
+                       ? context.tr('departed')
+                       : context.tr('absentStatus'),
               style:
                   TextStyle(
                 fontSize: 12,
@@ -751,7 +751,7 @@ class _AdminDashboardScreenState
            IconButton(
              onPressed: () => _editEmployeeSchedule(employee),
              icon: const Icon(Icons.calendar_month_outlined),
-             tooltip: 'تعديل أيام العمل',
+              tooltip: context.tr('editWorkDays'),
              color: AppColors.navy,
            ),
         ],
