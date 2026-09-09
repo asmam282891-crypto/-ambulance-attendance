@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class AppTextField extends StatelessWidget {
   final String label;
@@ -27,12 +28,35 @@ class AppTextField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       validator: validator,
+      style: const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 16,
+      ),
+      cursorColor: AppColors.ambulanceRed,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: icon != null ? Icon(icon) : null,
+        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        floatingLabelStyle: const TextStyle(color: AppColors.ambulanceRed),
+        prefixIcon: icon != null
+            ? Icon(icon, color: AppColors.textSecondary)
+            : null,
         suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.2),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: AppColors.ambulanceRed,
+            width: 1.8,
+          ),
         ),
       ),
     );
