@@ -84,10 +84,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Align(
-                    alignment: AlignmentDirectional.topEnd,
-                    child: const LanguageToggleButton(),
-                  ),
                   const SizedBox(height: 24),
                   Container(
                     width: 84,
