@@ -25,23 +25,15 @@ class AmbulanceAttendanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: AppLocaleController.instance,
-      builder: (context, _) {
-        final locale = AppLocaleController.instance;
-
-        return MaterialApp(
-          title: locale.text('appTitle'),
-          locale: locale.locale,
-          supportedLocales: const [
-            Locale('ar'),
-            Locale('en'),
-          ],
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.theme,
-          home: const _SessionGate(),
-        );
-      },
+    return MaterialApp(
+      title: AppLocaleController.instance.text('appTitle'),
+      locale: const Locale('ar'),
+      supportedLocales: const [
+        Locale('ar'),
+      ],
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.theme,
+      home: const _SessionGate(),
     );
   }
 }
