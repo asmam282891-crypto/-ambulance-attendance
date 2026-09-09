@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Lightweight in-app localization so the app can switch languages instantly
-/// without requiring generated ARB files or a restart.
+/// النصوص العربية الموحدة للتطبيق.
 class AppLocaleController extends ChangeNotifier {
   AppLocaleController._();
 
@@ -14,19 +13,11 @@ class AppLocaleController extends ChangeNotifier {
   TextDirection get textDirection =>
       isArabic ? TextDirection.rtl : TextDirection.ltr;
 
-  void toggle() {
-    _locale = isArabic ? const Locale('en') : const Locale('ar');
-    notifyListeners();
-  }
-
   String text(
     String key, [
     Map<String, String> values = const {},
   ]) {
-    final language = isArabic ? 'ar' : 'en';
-    var result = _translations[language]?[key] ??
-        _translations['ar']?[key] ??
-        key;
+    var result = _translations[key] ?? key;
 
     for (final entry in values.entries) {
       result = result.replaceAll('{{${entry.key}}}', entry.value);
@@ -45,27 +36,7 @@ extension AppLocalization on BuildContext {
   }
 }
 
-class LanguageToggleButton extends StatelessWidget {
-  const LanguageToggleButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final isArabic = AppLocaleController.instance.isArabic;
-
-    return TextButton.icon(
-      onPressed: AppLocaleController.instance.toggle,
-      icon: const Icon(Icons.language, size: 20),
-      label: Text(isArabic ? 'EN' : 'ع'),
-      style: TextButton.styleFrom(
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-      ),
-    );
-  }
-}
-
-const Map<String, Map<String, String>> _translations = {
-  'ar': {
+const Map<String, String> _translations = {
     'appTitle': 'نظام حضور الإسعاف المركزي',
     'loginSubtitle': 'سجّل دخولك لمتابعة الحضور والانصراف',
     'username': 'اسم المستخدم',
@@ -77,6 +48,10 @@ const Map<String, Map<String, String>> _translations = {
     'centralAmbulance': 'الإسعاف المركزي',
     'adminDashboard': 'لوحة تحكم المدير 👨‍💼',
     'employeeManagement': 'إدارة الموظفين',
+    'adminWelcome': 'تابع حالة الحضور وسجلات الموظفين من مكان واحد',
+    'todaySummary': 'ملخص اليوم',
+    'totalEmployees': 'إجمالي الموظفين',
+    'quickActions': 'إجراءات سريعة',
     'addEmployee': 'إضافة موظف',
     'scanBarcode': 'مسح الباركود',
     'employeeQrPrint': 'عرض باركود الموظفين للطباعة',
@@ -176,117 +151,4 @@ const Map<String, Map<String, String>> _translations = {
     'roleDriver': 'سائق',
     'rolePharmacist': 'صيدلي',
     'roleEmployee': 'موظف',
-  },
-  'en': {
-    'appTitle': 'Central Ambulance Attendance',
-    'loginSubtitle': 'Sign in to track attendance and departures',
-    'username': 'Username',
-    'password': 'Password',
-    'login': 'Sign in',
-    'invalidFields': 'Please enter your username and password',
-    'networkError': 'Something went wrong. Check your internet connection',
-    'logout': 'Sign out',
-    'centralAmbulance': 'Central Ambulance',
-    'adminDashboard': 'Admin Dashboard 👨‍💼',
-    'employeeManagement': 'Employee management',
-    'addEmployee': 'Add employee',
-    'scanBarcode': 'Scan barcode',
-    'employeeQrPrint': 'Show employee QR code for printing',
-    'attendanceReport': 'Attendance and departure log',
-    'searchEmployee': 'Search for an employee...',
-    'presentNow': 'Currently present',
-    'absent': 'Not present',
-    'noEmployees': 'No employees match the search',
-    'checkInLabel': 'Check-in',
-    'checkOutLabel': 'Check-out',
-    'present': 'Present',
-    'departed': 'Checked out',
-    'absentStatus': 'Absent',
-    'editWorkDays': 'Edit work days',
-    'workDaysFor': 'Work days for {{name}}',
-    'cancel': 'Cancel',
-    'saveDays': 'Save days',
-    'saveDaysSuccess': 'Work days saved ✅',
-    'monday': 'Monday',
-    'tuesday': 'Tuesday',
-    'wednesday': 'Wednesday',
-    'thursday': 'Thursday',
-    'friday': 'Friday',
-    'saturday': 'Saturday',
-    'sunday': 'Sunday',
-    'reportTitle': 'Attendance and departure report',
-    'printReport': 'Print report',
-    'refreshReport': 'Refresh report',
-    'reportDay': 'Report for {{date}}',
-    'recordsCount': 'Records: {{count}}',
-    'waitLoading': 'Wait for the report to finish loading',
-    'noDataPrint': 'There is no data to print for this report',
-    'printFailed': 'Could not print the report: {{error}}',
-    'noRecordsToday': 'No attendance records for this day',
-    'reportLoadError': 'Could not load the report',
-    'retry': 'Try again',
-    'checkInTime': 'Check-in time',
-    'checkOutTime': 'Check-out time',
-    'status': 'Status',
-    'unknown': 'Unknown',
-    'unscheduled': 'Unscheduled',
-    'jobTitle': 'Job title',
-    'employeeName': 'Employee name',
-    'centralSystem': 'Central Ambulance Attendance System',
-    'addUserTitle': 'Add user',
-    'attendanceUserData': 'Attendance user details',
-    'loginInstruction': 'The user will sign in with a username and password.',
-    'fullName': 'Full name',
-    'employeeNumber': 'Employee number',
-    'jobTitleLabel': 'Job title',
-    'customJobTitle': 'Enter a job title',
-    'departmentOptional': 'Department (optional)',
-    'phoneOptional': 'Phone number (optional)',
-    'createUser': 'Create user',
-    'userCreated': 'User created and linked to attendance ✅',
-    'createUserFailed': 'Could not create the user. Try again',
-    'createUserError': 'Could not create the user',
-    'enterField': 'Enter {{field}}',
-    'passwordMin': 'Password must be at least 6 characters',
-    'jobTitleShort': 'Job title is too short',
-    'jobTitleMax': 'Job title cannot exceed 100 characters',
-    'qrEmployees': 'Employee QR code',
-    'sharedQrDescription': 'One shared QR code for all employees to record attendance',
-    'qrPrintInstructions': 'Print this QR code and place it at the attendance point. It should be clear and large enough for employee cameras to scan.',
-    'updateQr': 'Refresh QR code',
-    'qrMissing': 'The attendance point QR code is not configured in Supabase',
-    'scanAttendanceQr': 'Scan attendance QR code',
-    'scanInstruction': 'Point the camera at the attendance point QR code',
-    'welcome': 'Welcome {{name}} 👋',
-    'inService': 'You are on duty ✅',
-    'checkedOut': 'Check-out recorded ✅',
-    'notChecked': 'Status: no check-in recorded',
-    'insideRange': 'Inside the central ambulance range',
-    'checkingLocation': 'Locating you...',
-    'outsideRange': 'Outside the center range; attendance cannot be recorded',
-    'locationError': 'Could not determine your location. Enable location services',
-    'scanCheckIn': 'Scan attendance QR code',
-    'checkOut': 'Record check-out',
-    'checkInSuccess': '{{name}} checked in successfully ✅\nYou are on duty',
-    'checkOutSuccess': 'Check-out recorded successfully 👋',
-    'checkInFailed': 'Could not record check-in. Try again',
-    'checkOutFailed': 'Could not record check-out. Try again',
-    'authInvalid': 'The username or password is incorrect',
-    'attendanceOpen': 'You already have an open attendance record',
-    'noOpenAttendance': 'There is no open attendance record to close',
-    'sessionExpired': 'Your session expired. Sign in again',
-    'notAuthorized': 'You are not authorized to perform this action',
-    'invalidQr': 'The attendance QR code is invalid',
-    'outsideAttendanceRange': 'You are outside the central ambulance range',
-    'missingProfile': 'No attendance profile is linked to this user',
-    'incompleteSettings': 'Center settings are incomplete in Supabase',
-    'roleAdmin': 'Admin',
-    'roleDoctor': 'Doctor',
-    'roleNurse': 'Nurse',
-    'roleParamedic': 'Paramedic',
-    'roleSecretary': 'Secretary',
-    'roleDriver': 'Driver',
-    'rolePharmacist': 'Pharmacist',
-    'roleEmployee': 'Employee',
-  },
 };
