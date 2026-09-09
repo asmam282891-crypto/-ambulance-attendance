@@ -27,11 +27,12 @@ class Employee {
     Map<String, dynamic> map, {
     bool? isCheckedIn,
     String? checkInTime,
+    String? checkOutTime,
   }) {
     // تنسيق وقت الحضور إن وجد في البيانات
     String? formattedTime = checkInTime;
     final rawTime = map['check_in_time'] ?? map['checked_in_at'];
-    String? formattedCheckOutTime;
+    String? formattedCheckOutTime = checkOutTime;
     final rawCheckOutTime = map['check_out_time'] ?? map['checked_out_at'];
     
     if (formattedTime == null && rawTime != null) {
@@ -43,7 +44,7 @@ class Employee {
       }
     }
 
-    if (rawCheckOutTime != null) {
+    if (formattedCheckOutTime == null && rawCheckOutTime != null) {
       final dateTime = DateTime.tryParse(rawCheckOutTime.toString())?.toLocal();
       if (dateTime != null) {
         final hour = dateTime.hour.toString().padLeft(2, '0');
