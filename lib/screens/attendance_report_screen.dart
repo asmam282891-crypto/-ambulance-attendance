@@ -95,7 +95,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
       return DateFormat(
         'hh:mm a',
-        AppLocaleController.instance.isArabic ? 'ar' : 'en',
+        'ar',
       ).format(dateTime);
     } catch (_) {
       return text;
@@ -323,7 +323,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
           title: Text(context.tr('reportTitle')),
           centerTitle: true,
           actions: [
-            const LanguageToggleButton(),
             IconButton(
               onPressed: _printing ? null : _printReport,
               tooltip: context.tr('printReport'),
