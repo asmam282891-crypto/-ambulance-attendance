@@ -3,6 +3,7 @@ import '../models/employee.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_text_field.dart';
+import '../l10n/app_localizations.dart';
 import 'attendance_screen.dart';
 import 'admin_dashboard_screen.dart';
 
@@ -33,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'يرجى إدخال اسم المستخدم وكلمة المرور');
+      setState(() => _errorMessage = context.tr('invalidFields'));
       return;
     }
 
@@ -65,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on ApiException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (_) {
-      setState(() => _errorMessage = 'حدث خطأ، تحقق من الاتصال بالإنترنت');
+      setState(() => _errorMessage = context.tr('networkError'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -74,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: Scaffold(
         body: SafeArea(
           child: Center(
@@ -83,6 +84,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Align(
+                    alignment: AlignmentDirectional.topEnd,
+                    child: const LanguageToggleButton(),
+                  ),
                   const SizedBox(height: 24),
                   Container(
                     width: 84,
@@ -103,25 +108,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'نظام حضور الإسعاف المركزي',
+                    context.tr('appTitle'),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'سجّل دخولك لمتابعة الحضور والانصراف',
+                    context.tr('loginSubtitle'),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 36),
                   AppTextField(
-                    label: 'اسم المستخدم',
+                    label: context.tr('username'),
                     controller: _usernameController,
                     keyboardType: TextInputType.text,
                     icon: Icons.person_outline,
                   ),
                   const SizedBox(height: 18),
                   AppTextField(
-                    label: 'كلمة المرور',
+                    label: context.tr('password'),
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     icon: Icons.lock_outline,
@@ -167,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               strokeWidth: 2.4,
                             ),
                           )
-                        : const Text('تسجيل الدخول'),
+                        : Text(context.tr('login')),
                   ),
                   const SizedBox(height: 24),
                 ],
