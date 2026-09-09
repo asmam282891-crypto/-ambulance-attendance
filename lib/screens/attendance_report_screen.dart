@@ -66,7 +66,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: ui.TextDirection.rtl,
           child: child!,
         );
       },
@@ -291,7 +291,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('تقرير الحضور واليومي'),
@@ -606,3 +606,4 @@ class _TimeBox extends StatelessWidget {
     );
   }
 }
+ 
