@@ -245,7 +245,6 @@ class _AdminDashboardScreenState
           title: Text(context.tr('adminDashboard')),
           centerTitle: true,
           actions: [
-            const LanguageToggleButton(),
             IconButton(
               onPressed: _logout,
               icon: const Icon(
@@ -262,288 +261,292 @@ class _AdminDashboardScreenState
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 900;
-                  final horizontalPadding = isWide ? 32.0 : 20.0;
+                  final horizontalPadding =
+                      constraints.maxWidth >= 900 ? 32.0 : 20.0;
+                  final presentCount = _presentEmployees.length;
+                  final absentCount = _absentEmployees.length;
 
                   return RefreshIndicator(
                     onRefresh: _loadData,
                     child: ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    20,
-                    horizontalPadding,
-                    28,
-                  ),
-                  children: [
-                    if (_errorMessage != null)
-                      Container(
-                        width: double.infinity,
-                        padding:
-                            const EdgeInsets.all(12),
-                        margin:
-                            const EdgeInsets.only(
-                          bottom: 16,
-                        ),
-                        decoration:
-                            BoxDecoration(
-                          color:
-                              AppColors.dangerBg,
-                          borderRadius:
-                              BorderRadius.circular(
-                            10,
-                          ),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          textAlign:
-                              TextAlign.center,
-                          style:
-                              const TextStyle(
-                            color:
-                                AppColors.danger,
-                          ),
-                        ),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        20,
+                        horizontalPadding,
+                        28,
                       ),
-
-                    // =========================
-                    const SizedBox(height: 8),
-
-                    Text(
-                      context.tr('employeeManagement'),
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // =========================
-                    // أزرار الإدارة
-                    // =========================
-                    Row(
                       children: [
-                        Expanded(
-                          child:
-                              OutlinedButton.icon(
-                            onPressed: () async {
-                              final created =
-                                  await Navigator.of(
-                                context,
-                              ).push<bool>(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const AddUserScreen(),
-                                ),
-                              );
-
-                              if (created == true &&
-                                  mounted) {
-                                await _loadData();
-                              }
-                            },
-                            icon: const Icon(
-                              Icons
-                                  .person_add_alt_1,
-                              size: 18,
+                        if (_errorMessage != null)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: AppColors.dangerBg,
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                              label: Text(context.tr('addEmployee')),
-                            style:
-                                OutlinedButton.styleFrom(
-                              minimumSize:
-                                  const Size
-                                      .fromHeight(
-                                46,
-                              ),
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  12,
-                                ),
+                            child: Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: AppColors.danger,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
+                        _buildSummaryCard(
+                          total: _employees.length,
+                          present: presentCount,
+                          absent: absentCount,
                         ),
+                        const SizedBox(height: 24),
+                        Text(
+                          context.tr('employeeManagement'),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.tr('adminWelcome'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          context.tr('quickActions'),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 10),
+                        LayoutBuilder(
+                          builder: (context, actionConstraints) {
+                            final addUserButton = _buildActionButton(
+                              icon: Icons.person_add_alt_1,
+                              label: context.tr('addEmployee'),
+                              onPressed: () async {
+                                final created =
+                                    await Navigator.of(context).push<bool>(
+                                  MaterialPageRoute(
+                                    builder: (_) => const AddUserScreen(),
+                                  ),
+                                );
+                                if (created == true && mounted) {
+                                  await _loadData();
+                                }
+                              },
+                            );
+                            final scanButton = _buildActionButton(
+                              icon: Icons.qr_code_scanner,
+                              label: context.tr('scanBarcode'),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const QrScanScreen(),
+                                  ),
+                                );
+                              },
+                            );
 
-                        const SizedBox(width: 10),
-
-                        Expanded(
-                          child:
-                              OutlinedButton.icon(
-                            onPressed: () {
-                              Navigator.of(
-                                context,
-                              ).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const QrScanScreen(),
-                                ),
+                            if (actionConstraints.maxWidth < 620) {
+                              return Column(
+                                children: [
+                                  addUserButton,
+                                  const SizedBox(height: 10),
+                                  scanButton,
+                                ],
                               );
-                            },
-                            icon: const Icon(
-                              Icons
-                                  .qr_code_scanner,
-                              size: 22,
-                            ),
-                             label: Text(context.tr('scanBarcode')),
-                            style:
-                                OutlinedButton.styleFrom(
-                              minimumSize:
-                                  const Size
-                                      .fromHeight(
-                                46,
-                              ),
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  12,
-                                ),
-                              ),
-                            ),
+                            }
+
+                            return Row(
+                              children: [
+                                Expanded(child: addUserButton),
+                                const SizedBox(width: 10),
+                                Expanded(child: scanButton),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        _buildActionButton(
+                          icon: Icons.qr_code_2,
+                          label: context.tr('employeeQrPrint'),
+                          color: AppColors.navy,
+                          onPressed: _openAttendanceQr,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildActionButton(
+                          icon: Icons.assignment_outlined,
+                          label: context.tr('attendanceReport'),
+                          color: AppColors.ambulanceRed,
+                          onPressed: _openAttendanceReport,
+                        ),
+                        const SizedBox(height: 24),
+                        TextField(
+                          controller: _searchController,
+                          onChanged: _scheduleEmployeeSearch,
+                          textAlign: TextAlign.right,
+                          decoration: InputDecoration(
+                            hintText: context.tr('searchEmployee'),
+                            prefixIcon: const Icon(Icons.search, size: 20),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        if (_presentEmployees.isNotEmpty) ...[
+                          _buildEmployeeSectionHeader(
+                            title: context.tr('presentNow'),
+                            count: presentCount,
+                            color: AppColors.success,
+                          ),
+                          ..._presentEmployees.map(_buildEmployeeTile),
+                        ],
+                        if (_absentEmployees.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          _buildEmployeeSectionHeader(
+                            title: context.tr('absent'),
+                            count: absentCount,
+                            color: AppColors.danger,
+                          ),
+                          ..._absentEmployees.map(_buildEmployeeTile),
+                        ],
+                        if (_employees.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            child: Text(
+                              context.tr('noEmployees'),
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
                       ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // =========================
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _openAttendanceQr,
-                        icon: const Icon(Icons.qr_code_2, size: 22),
-                         label: Text(context.tr('employeeQrPrint')),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(50),
-                          foregroundColor: AppColors.navy,
-                          side: const BorderSide(color: AppColors.navy),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // سجل الحضور والانصراف
-                    // =========================
-                    SizedBox(
-                      width: double.infinity,
-                      child:
-                          OutlinedButton.icon(
-                        onPressed:
-                            _openAttendanceReport,
-                        icon: const Icon(
-                          Icons
-                              .assignment_outlined,
-                          size: 23,
-                        ),
-                         label: Text(
-                           context.tr('attendanceReport'),
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight:
-                                FontWeight.w600,
-                          ),
-                        ),
-                        style:
-                            OutlinedButton.styleFrom(
-                          minimumSize:
-                              const Size
-                                  .fromHeight(
-                            50,
-                          ),
-                          foregroundColor:
-                              AppColors
-                                  .ambulanceRed,
-                          side:
-                              const BorderSide(
-                            color: AppColors
-                                .ambulanceRed,
-                          ),
-                          shape:
-                              RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(
-                              12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // =========================
-                    // البحث
-                    // =========================
-                    TextField(
-                      controller:
-                          _searchController,
-                      onChanged:
-                          _scheduleEmployeeSearch,
-                      textAlign:
-                          TextAlign.right,
-                       decoration:
-                           InputDecoration(
-                         hintText: context.tr('searchEmployee'),
-                        prefixIcon:
-                            Icon(
-                          Icons.search,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // =========================
-                    // قائمة الموظفين المرتبة حسب الحالة
-                    // =========================
-                    if (_presentEmployees.isNotEmpty) ...[
-                      _buildEmployeeSectionHeader(
-                         title: context.tr('presentNow'),
-                        count: _presentEmployees.length,
-                        color: AppColors.success,
-                      ),
-                      ..._presentEmployees.map(_buildEmployeeTile),
-                    ],
-
-                    if (_absentEmployees.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      _buildEmployeeSectionHeader(
-                         title: context.tr('absent'),
-                        count: _absentEmployees.length,
-                        color: AppColors.danger,
-                      ),
-                      ..._absentEmployees.map(_buildEmployeeTile),
-                    ],
-
-                    if (_employees.isEmpty)
-                      Padding(
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          vertical: 32,
-                        ),
-                        child: Text(
-                           context.tr('noEmployees'),
-                          textAlign:
-                              TextAlign.center,
-                          style:
-                              Theme.of(context)
-                                  .textTheme
-                                  .bodySmall,
-                        ),
-                      ),
-                  ],
                     ),
                   );
                 },
               ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required int total,
+    required int present,
+    required int absent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.navy.withOpacity(0.16),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.tr('todaySummary'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            context.tr('adminWelcome'),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.72),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryMetric(
+                  value: total,
+                  label: context.tr('totalEmployees'),
+                  color: Colors.white,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryMetric(
+                  value: present,
+                  label: context.tr('presentNow'),
+                  color: const Color(0xFF8BE0B3),
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryMetric(
+                  value: absent,
+                  label: context.tr('absent'),
+                  color: const Color(0xFFFFB3B3),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryMetric({
+    required int value,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Text(
+          '$value',
+          style: TextStyle(
+            color: color,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.78),
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    final buttonColor = color ?? AppColors.navy;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 21),
+        label: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: buttonColor,
+          side: BorderSide(color: buttonColor.withOpacity(0.8)),
+          minimumSize: const Size.fromHeight(50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
     );
   }
