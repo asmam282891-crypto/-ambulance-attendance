@@ -57,6 +57,9 @@ class _AttendanceScreenState
     _checkInTime =
         widget.employee.checkInTime;
 
+    _checkOutTime =
+        widget.employee.checkOutTime;
+
     _loadSettingsAndLocation();
   }
 
@@ -396,10 +399,10 @@ class _AttendanceScreenState
       child: Row(
         children: [
           Icon(
-            _isCheckedIn
+            _isCheckedIn || _checkOutTime != null
                 ? Icons.check_circle
                 : Icons.access_time_filled,
-            color: _isCheckedIn
+            color: _isCheckedIn || _checkOutTime != null
                 ? AppColors.success
                 : Colors.grey,
             size: 28,
@@ -415,18 +418,19 @@ class _AttendanceScreenState
                 Text(
                   _isCheckedIn
                       ? 'أنت في الخدمة ✅'
-                      : 'الحالة: لم تسجل الحضور',
+                      : _checkOutTime != null
+                          ? 'تم تسجيل الانصراف ✅'
+                          : 'الحالة: لم تسجل الحضور',
                   style: TextStyle(
                     fontWeight:
                         FontWeight.bold,
-                    color: _isCheckedIn
+                    color: _isCheckedIn || _checkOutTime != null
                         ? AppColors.success
                         : Colors.black87,
                   ),
                 ),
 
-                if (_isCheckedIn &&
-                    _checkInTime != null)
+                if (_checkInTime != null)
                   Padding(
                     padding:
                         const EdgeInsets.only(
@@ -434,6 +438,23 @@ class _AttendanceScreenState
                     ),
                     child: Text(
                       '⏰ وقت الحضور: $_checkInTime',
+                      style:
+                          const TextStyle(
+                        fontSize: 13,
+                        color: AppColors
+                            .textSecondary,
+                      ),
+                    ),
+                  ),
+
+                if (_checkOutTime != null)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(
+                      top: 2,
+                    ),
+                    child: Text(
+                      '⏱️ وقت الانصراف: $_checkOutTime',
                       style:
                           const TextStyle(
                         fontSize: 13,
