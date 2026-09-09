@@ -35,7 +35,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     'pharmacist',
     'employee',
     'admin',
-  };
+  ];
 
   String _jobTitleLabel(BuildContext context, String role) {
     switch (role) {
@@ -150,7 +150,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                 label: context.tr('fullName'),
                 controller: _fullNameController,
                 icon: Icons.badge_outlined,
-                 validator: (value) => _required(value, context.tr('fullName')),
+                validator: (value) => _required(value, context.tr('fullName')),
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -167,10 +167,10 @@ class _AddUserScreenState extends State<AddUserScreen> {
                 icon: Icons.lock_outline,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                     return context.tr('enterField', {'field': context.tr('password')});
+                    return context.tr('enterField', {'field': context.tr('password')});
                   }
                   if (value.length < 6) {
-                     return context.tr('passwordMin');
+                    return context.tr('passwordMin');
                   }
                   return null;
                 },
@@ -186,14 +186,14 @@ class _AddUserScreenState extends State<AddUserScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _jobTitle,
-                 decoration: InputDecoration(
-                   labelText: context.tr('jobTitleLabel'),
-                 ),
-                 items: _jobTitles
+                decoration: InputDecoration(
+                  labelText: context.tr('jobTitleLabel'),
+                ),
+                items: _jobTitles
                     .map(
-                       (role) => DropdownMenuItem(
-                         value: role,
-                         child: Text(_jobTitleLabel(context, role)),
+                      (role) => DropdownMenuItem(
+                        value: role,
+                        child: Text(_jobTitleLabel(context, role)),
                       ),
                     )
                     .toList(),
@@ -203,28 +203,28 @@ class _AddUserScreenState extends State<AddUserScreen> {
                         if (value == null) return;
                         setState(() {
                           _jobTitle = value;
-                           _role = value;
-                           _isCustomJobTitle = value == 'employee';
+                          _role = value;
+                          _isCustomJobTitle = value == 'employee';
                         });
                       },
               ),
               if (_isCustomJobTitle) ...[
                 const SizedBox(height: 16),
                 AppTextField(
-                   label: context.tr('customJobTitle'),
+                  label: context.tr('customJobTitle'),
                   controller: _customJobTitleController,
                   icon: Icons.work_outline,
                   validator: (value) {
                     final title = value?.trim() ?? '';
-                     if (title.isEmpty) {
-                       return context.tr(
-                         'enterField',
-                         {'field': context.tr('jobTitle')},
-                       );
-                     }
-                     if (title.length < 2) return context.tr('jobTitleShort');
+                    if (title.isEmpty) {
+                      return context.tr(
+                        'enterField',
+                        {'field': context.tr('jobTitle')},
+                      );
+                    }
+                    if (title.length < 2) return context.tr('jobTitleShort');
                     if (title.length > 100) {
-                       return context.tr('jobTitleMax');
+                      return context.tr('jobTitleMax');
                     }
                     return null;
                   },
