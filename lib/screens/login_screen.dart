@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      setState(() => _errorMessage = 'حدث خطأ أثناء تسجيل الدخول: $e');
+      setState(() => _errorMessage = 'حدث خطأ أثناء تسجيل الدخول');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -84,41 +84,61 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 84,
                     height: 84,
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: Color(0xFFD32F2F),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
                     child: const Text('🚑', style: TextStyle(fontSize: 38)),
                   ),
                   const SizedBox(height: 20),
-                  Text(
+                  const Text(
                     'نظام حضور الإسعاف المركزي',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
+                  const SizedBox(height: 6),
+                  const Text(
                     'سجّل دخولك لمتابعة الحضور والانصراف',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
                   ),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 32),
+
+                  // حقل اسم المستخدم المباشر
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'اسم المستخدم',
-                      prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
+
+                  // حقل كلمة المرور المباشر
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'كلمة المرور',
                       prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -133,6 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 14),
                     Container(
@@ -149,14 +170,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
+
                   const SizedBox(height: 28),
+
+                  // زر تسجيل الدخول
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 48,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: const Color(0xFFD32F2F),
                         foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: _isLoading ? null : _handleLogin,
                       child: _isLoading
@@ -168,7 +195,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 strokeWidth: 2.4,
                               ),
                             )
-                          : const Text('تسجيل الدخول'),
+                          : const Text(
+                              'تسجيل الدخول',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
