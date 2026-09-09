@@ -9,6 +9,7 @@ class Employee {
   final List<int> workDays;
   final bool isCheckedIn;
   final String? checkInTime; // زمن الحضور
+  final String? checkOutTime; // زمن الانصراف
 
   Employee({
     required this.id,
@@ -19,6 +20,7 @@ class Employee {
     this.workDays = const [1, 2, 3, 4, 5, 6, 7],
     this.isCheckedIn = false,
     this.checkInTime,
+    this.checkOutTime,
   });
 
   factory Employee.fromMap(
@@ -29,6 +31,8 @@ class Employee {
     // تنسيق وقت الحضور إن وجد في البيانات
     String? formattedTime = checkInTime;
     final rawTime = map['check_in_time'] ?? map['checked_in_at'];
+    String? formattedCheckOutTime;
+    final rawCheckOutTime = map['check_out_time'] ?? map['checked_out_at'];
     
     if (formattedTime == null && rawTime != null) {
       final dateTime = DateTime.tryParse(rawTime.toString())?.toLocal();
@@ -36,6 +40,15 @@ class Employee {
         final hour = dateTime.hour.toString().padLeft(2, '0');
         final minute = dateTime.minute.toString().padLeft(2, '0');
         formattedTime = '$hour:$minute';
+      }
+    }
+
+    if (rawCheckOutTime != null) {
+      final dateTime = DateTime.tryParse(rawCheckOutTime.toString())?.toLocal();
+      if (dateTime != null) {
+        final hour = dateTime.hour.toString().padLeft(2, '0');
+        final minute = dateTime.minute.toString().padLeft(2, '0');
+        formattedCheckOutTime = '$hour:$minute';
       }
     }
 
@@ -52,6 +65,7 @@ class Employee {
       workDays: _parseWorkDays(map['work_days']),
       isCheckedIn: isCheckedIn ?? statusFromMap,
       checkInTime: formattedTime,
+      checkOutTime: formattedCheckOutTime,
     );
   }
 
@@ -83,12 +97,14 @@ class Employee {
       'work_days': workDays,
       'is_checked_in': isCheckedIn,
       'check_in_time': checkInTime,
+      'check_out_time': checkOutTime,
     };
   }
 
   Employee copyWith({
     bool? isCheckedIn,
     String? checkInTime,
+    String? checkOutTime,
   }) {
     return Employee(
       id: id,
@@ -99,6 +115,7 @@ class Employee {
       workDays: workDays,
       isCheckedIn: isCheckedIn ?? this.isCheckedIn,
       checkInTime: checkInTime ?? this.checkInTime,
+      checkOutTime: checkOutTime ?? this.checkOutTime,
     );
   }
 
