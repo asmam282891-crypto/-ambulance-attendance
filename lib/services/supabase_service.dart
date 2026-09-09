@@ -100,10 +100,56 @@ class SupabaseService {
     final isCheckedIn =
         await _hasOpenAttendance(userId);
 
+    Map<String, dynamic>? todayAttendance;
+    try {
+      todayAttendance =
+          await _fetchTodayAttendance(userId);
+    } on PostgrestException {
+      // لا نمنع تسجيل الدخول إذا تعذر تحميل الوقتين فقط.
+    }
+
     return Employee.fromMap(
       row,
       isCheckedIn: isCheckedIn,
+      checkInTime: _formatAttendanceTime(
+        todayAttendance?['check_in'],
+      ),
+      checkOutTime: _formatAttendanceTime(
+        todayAttendance?['check_out'],
+      ),
     );
+  }
+
+  Future<Map<String, dynamic>?> _fetchTodayAttendance(
+    String employeeId,
+  ) async {
+    final now = DateTime.now();
+    final dateString =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+
+    final rows = await _client
+        .from('attendance_records')
+        .select('check_in, check_out')
+        .eq('user_id', employeeId)
+        .eq('attendance_date', dateString)
+        .order('check_in', ascending: false)
+        .limit(1);
+
+    if ((rows as List).isEmpty) return null;
+
+    return Map<String, dynamic>.from(rows.first);
+  }
+
+  String? _formatAttendanceTime(dynamic value) {
+    if (value == null) return null;
+
+    final dateTime =
+        DateTime.tryParse(value.toString())?.toLocal();
+    if (dateTime == null) return null;
+
+    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   Future<bool> _hasOpenAttendance(
@@ -252,20 +298,13 @@ class SupabaseService {
         }
       }
 
-      String? formatAttendanceTime(dynamic value) {
-        if (value == null) return null;
-        final dateTime = DateTime.tryParse(value.toString())?.toLocal();
-        if (dateTime == null) return null;
-        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-      }
-
       final presentIds = <String>{};
       final checkInTimes = <String, String>{};
       final checkOutTimes = <String, String>{};
       for (final entry in latestAttendance.entries) {
         final record = entry.value;
-        final checkIn = formatAttendanceTime(record['check_in']);
-        final checkOut = formatAttendanceTime(record['check_out']);
+        final checkIn = _formatAttendanceTime(record['check_in']);
+        final checkOut = _formatAttendanceTime(record['check_out']);
         if (checkIn != null) checkInTimes[entry.key] = checkIn;
         if (checkOut != null) {
           checkOutTimes[entry.key] = checkOut;
