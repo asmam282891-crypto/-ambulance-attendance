@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+Import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -137,17 +137,17 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     switch (status.toLowerCase()) {
       case 'present':
       case 'checked_in':
-      case 'حاضر':
+      case 'ط­ط§ط¶ط±':
         return context.tr('present');
       case 'checked_out':
       case 'departed':
-      case 'انصرف':
+      case 'ط§ظ†طµط±ظپ':
         return context.tr('departed');
       case 'absent':
-      case 'غائب':
+      case 'ط؛ط§ط¦ط¨':
         return context.tr('absentStatus');
       case 'unscheduled':
-      case 'غير مجدول':
+      case 'ط؛ظٹط± ظ…ط¬ط¯ظˆظ„':
         return context.tr('unscheduled');
       default:
         return status;
@@ -175,6 +175,25 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       _printing = true;
     });
 
+    // IMPORTANT: resolve every localized string using the *Flutter* BuildContext
+    // BEFORE building the pdf document. Inside pw.MultiPage's `build` callback the
+    // parameter is a pdf-package `pw.Context`, which shadows this widget's
+    // BuildContext and has no `tr()` method â€” calling context.tr(...) in there
+    // fails to compile.
+    final centralSystemText = context.tr('centralSystem');
+    final reportTitleText = context.tr('reportTitle');
+    final recordsCountText = context.tr(
+      'recordsCount',
+      {'count': '${_records.length}'},
+    );
+    final statusHeader = context.tr('status');
+    final checkOutHeader = context.tr('checkOutTime');
+    final checkInHeader = context.tr('checkInTime');
+    final jobTitleHeader = context.tr('jobTitle');
+    final nameHeader = context.tr('employeeName');
+    final printFailedTemplate = (Object error) =>
+        context.tr('printFailed', {'error': '$error'});
+
     try {
       final regularFont = await PdfGoogleFonts.amiriRegular();
       final boldFont = await PdfGoogleFonts.amiriBold();
@@ -201,7 +220,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
             base: regularFont,
             bold: boldFont,
           ),
-          build: (context) => [
+          build: (pw.Context pdfContext) => [
             pw.Directionality(
               textDirection: AppLocaleController.instance.isArabic
                   ? pw.TextDirection.rtl
@@ -210,7 +229,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                 crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                 children: [
                   pw.Text(
-                    context.tr('centralSystem'),
+                    centralSystemText,
                     textAlign: pw.TextAlign.center,
                     style: pw.TextStyle(
                       fontSize: 20,
@@ -219,27 +238,24 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   ),
                   pw.SizedBox(height: 6),
                   pw.Text(
-                    '${context.tr('reportTitle')} — $reportDate',
+                    '$reportTitleText â€” $reportDate',
                     textAlign: pw.TextAlign.center,
                     style: const pw.TextStyle(fontSize: 14),
                   ),
                   pw.SizedBox(height: 18),
                   pw.Text(
-                    context.tr(
-                      'recordsCount',
-                      {'count': '${_records.length}'},
-                    ),
+                    recordsCountText,
                     textAlign: pw.TextAlign.right,
                     style: const pw.TextStyle(fontSize: 11),
                   ),
                   pw.SizedBox(height: 8),
                   pw.Table.fromTextArray(
                     headers: [
-                      context.tr('status'),
-                      context.tr('checkOutTime'),
-                      context.tr('checkInTime'),
-                      context.tr('jobTitle'),
-                      context.tr('employeeName'),
+                      statusHeader,
+                      checkOutHeader,
+                      checkInHeader,
+                      jobTitleHeader,
+                      nameHeader,
                     ],
                     data: rows,
                     headerStyle: pw.TextStyle(
@@ -292,12 +308,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.tr(
-              'printFailed',
-              {'error': '$e'},
-            ),
-          ),
+          content: Text(printFailedTemplate(e)),
           backgroundColor: Colors.red,
         ),
       );
@@ -452,14 +463,16 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         onRefresh: _loadReport,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          children: const [
-            SizedBox(height: 100),
-            Icon(
+          // NOT const: this list contains a Text that calls context.tr(...),
+          // which is a runtime method call and cannot be a compile-time constant.
+          children: [
+            const SizedBox(height: 100),
+            const Icon(
               Icons.event_busy,
               size: 60,
               color: Colors.grey,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Center(
               child: Text(
                 context.tr('noRecordsToday'),
