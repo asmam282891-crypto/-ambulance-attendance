@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'theme/app_theme.dart';
+import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +25,23 @@ class AmbulanceAttendanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'نظام حضور الإسعاف المركزي',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      home: const _SessionGate(),
+    return AnimatedBuilder(
+      animation: AppLocaleController.instance,
+      builder: (context, _) {
+        final locale = AppLocaleController.instance;
+
+        return MaterialApp(
+          title: locale.text('appTitle'),
+          locale: locale.locale,
+          supportedLocales: const [
+            Locale('ar'),
+            Locale('en'),
+          ],
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.theme,
+          home: const _SessionGate(),
+        );
+      },
     );
   }
 }
