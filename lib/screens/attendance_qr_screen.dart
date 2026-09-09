@@ -61,7 +61,6 @@ child: Scaffold(
 appBar: AppBar(
  title: Text(context.tr('qrEmployees')),
 centerTitle: true,
- actions: const [LanguageToggleButton()],
 ),
 body: _buildBody(),
 ),
