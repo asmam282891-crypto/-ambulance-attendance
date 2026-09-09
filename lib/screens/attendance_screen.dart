@@ -157,7 +157,7 @@ class _AttendanceScreenState
         _checkOutTime = null;
 
         _feedback =
-            'تم تسجيل الحضور بنجاح ✅';
+            'تم تسجيل حضور ${widget.employee.title} بنجاح ✅\nأنت في الخدمة';
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -414,7 +414,7 @@ class _AttendanceScreenState
               children: [
                 Text(
                   _isCheckedIn
-                      ? 'الحالة: حاضر'
+                      ? 'أنت في الخدمة ✅'
                       : 'الحالة: لم تسجل الحضور',
                   style: TextStyle(
                     fontWeight:
