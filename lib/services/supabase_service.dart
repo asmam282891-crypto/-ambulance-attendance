@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/employee.dart';
 import '../models/dashboard_stats.dart';
 import '../models/attendance_settings.dart';
+import '../l10n/app_localizations.dart';
 
 /// نقطة الاتصال الوحيدة بين التطبيق وقاعدة بيانات Supabase.
 class SupabaseService {
@@ -37,7 +38,7 @@ class SupabaseService {
 
     if (email == null || email.isEmpty) {
       throw ApiException(
-        'اسم المستخدم أو كلمة المرور غير صحيحة',
+        AppLocaleController.instance.text('authInvalid'),
       );
     }
 
@@ -58,7 +59,7 @@ class SupabaseService {
 
     if (user == null) {
       throw ApiException(
-        'اسم المستخدم أو كلمة المرور غير صحيحة',
+        AppLocaleController.instance.text('authInvalid'),
       );
     }
 
@@ -179,7 +180,7 @@ class SupabaseService {
 
     if (userId == null) {
       throw ApiException(
-        'انتهت الجلسة، سجّل الدخول مجددًا',
+        AppLocaleController.instance.text('sessionExpired'),
       );
     }
 
@@ -208,7 +209,7 @@ class SupabaseService {
 
     if (userId == null) {
       throw ApiException(
-        'انتهت الجلسة، سجّل الدخول مجددًا',
+        AppLocaleController.instance.text('sessionExpired'),
       );
     }
 
@@ -423,7 +424,7 @@ class SupabaseService {
       if (response.status < 200 ||
           response.status >= 300) {
         throw ApiException(
-          'تعذّر إنشاء المستخدم',
+          AppLocaleController.instance.text('createUserError'),
         );
       }
     } catch (e) {
@@ -432,7 +433,7 @@ class SupabaseService {
       }
 
       throw ApiException(
-        'تعذّر إنشاء المستخدم: ${e.toString()}',
+        '${AppLocaleController.instance.text('createUserError')}: ${e.toString()}',
       );
     }
   }
@@ -470,7 +471,7 @@ class SupabaseService {
         .contains(
           'invalid login credentials',
         )) {
-      return 'اسم المستخدم أو كلمة المرور غير صحيحة';
+      return AppLocaleController.instance.text('authInvalid');
     }
 
     return message;
@@ -485,49 +486,49 @@ class SupabaseService {
     if (lower.contains(
       'open attendance already exists',
     )) {
-      return 'لديك تسجيل حضور مفتوح بالفعل';
+      return AppLocaleController.instance.text('attendanceOpen');
     }
 
     if (lower.contains(
       'no open attendance',
     )) {
-      return 'لا يوجد تسجيل حضور مفتوح لإغلاقه';
+      return AppLocaleController.instance.text('noOpenAttendance');
     }
 
     if (lower.contains(
       'not authenticated',
     )) {
-      return 'انتهت الجلسة، سجّل الدخول مجددًا';
+      return AppLocaleController.instance.text('sessionExpired');
     }
 
     if (lower.contains(
       'not authorized',
     )) {
-      return 'ليس لديك صلاحية لتنفيذ هذا الإجراء';
+      return AppLocaleController.instance.text('notAuthorized');
     }
 
     if (lower.contains(
       'invalid attendance qr code',
     )) {
-      return 'باركود الحضور غير صحيح';
+      return AppLocaleController.instance.text('invalidQr');
     }
 
     if (lower.contains(
       'outside attendance center range',
     )) {
-      return 'أنت خارج نطاق الإسعاف المركزي';
+      return AppLocaleController.instance.text('outsideAttendanceRange');
     }
 
     if (lower.contains(
       'attendance user profile is missing',
     )) {
-      return 'لا يوجد ملف حضور مرتبط بهذا المستخدم';
+      return AppLocaleController.instance.text('missingProfile');
     }
 
     if (lower.contains(
       'attendance settings are incomplete',
     )) {
-      return 'إعدادات المركز غير مكتملة في Supabase';
+      return AppLocaleController.instance.text('incompleteSettings');
     }
 
     return message;
