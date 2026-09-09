@@ -277,7 +277,6 @@ class _AttendanceScreenState
           ),
           centerTitle: true,
           actions: [
-            const LanguageToggleButton(),
             IconButton(
               onPressed: _logout,
               icon: const Icon(
