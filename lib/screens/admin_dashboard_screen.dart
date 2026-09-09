@@ -566,11 +566,26 @@ class _AdminDashboardScreenState
                     const SizedBox(height: 12),
 
                     // =========================
-                    // قائمة الموظفين
+                    // قائمة الموظفين المرتبة حسب الحالة
                     // =========================
-                    ..._employees.map(
-                      _buildEmployeeTile,
-                    ),
+                    if (_presentEmployees.isNotEmpty) ...[
+                      _buildEmployeeSectionHeader(
+                        title: 'الحاضرون الآن',
+                        count: _presentEmployees.length,
+                        color: AppColors.success,
+                      ),
+                      ..._presentEmployees.map(_buildEmployeeTile),
+                    ],
+
+                    if (_absentEmployees.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      _buildEmployeeSectionHeader(
+                        title: 'غير الحاضرين',
+                        count: _absentEmployees.length,
+                        color: AppColors.danger,
+                      ),
+                      ..._absentEmployees.map(_buildEmployeeTile),
+                    ],
 
                     if (_employees.isEmpty)
                       Padding(
@@ -594,6 +609,58 @@ class _AdminDashboardScreenState
                   );
                 },
               ),
+      ),
+    );
+  }
+
+  List<Employee> get _presentEmployees =>
+      _employees.where((employee) => employee.isCheckedIn).toList();
+
+  List<Employee> get _absentEmployees =>
+      _employees.where((employee) => !employee.isCheckedIn).toList();
+
+  Widget _buildEmployeeSectionHeader({
+    required String title,
+    required int count,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 22,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
