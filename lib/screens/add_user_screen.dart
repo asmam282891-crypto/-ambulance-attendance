@@ -129,7 +129,6 @@ class _AddUserScreenState extends State<AddUserScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.tr('addUserTitle')),
-          actions: const [LanguageToggleButton()],
         ),
         body: Form(
           key: _formKey,
