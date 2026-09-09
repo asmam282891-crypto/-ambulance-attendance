@@ -234,40 +234,53 @@ class SupabaseService {
           await query.order('full_name');
 
       // الموظفون الذين لديهم حضور مفتوح حاليًا.
-      final openAttendance =
-          await _client
-              .from('attendance_records')
-              .select('user_id, check_in')
-              .isFilter(
-                'check_out',
-                null,
-              );
+      final now = DateTime.now();
+      final dateString =
+          '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-      final checkInTimes = <String, String>{};
-      for (final record in (openAttendance as List)) {
+      final attendanceRows = await _client
+          .from('attendance_records')
+          .select('user_id, check_in, check_out')
+          .eq('attendance_date', dateString)
+          .order('check_in', ascending: false);
+
+      final latestAttendance = <String, Map<String, dynamic>>{};
+      for (final record in (attendanceRows as List)) {
         final userId = record['user_id']?.toString();
-        final rawCheckIn = record['check_in'];
-        if (userId == null || rawCheckIn == null) continue;
-
-        final dateTime =
-            DateTime.tryParse(rawCheckIn.toString())?.toLocal();
-        if (dateTime != null) {
-          checkInTimes[userId] =
-              '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        if (userId != null && !latestAttendance.containsKey(userId)) {
+          latestAttendance[userId] = Map<String, dynamic>.from(record);
         }
       }
 
-      final presentIds = checkInTimes.keys.toSet();
+      String? formatAttendanceTime(dynamic value) {
+        if (value == null) return null;
+        final dateTime = DateTime.tryParse(value.toString())?.toLocal();
+        if (dateTime == null) return null;
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      }
+
+      final presentIds = <String>{};
+      final checkInTimes = <String, String>{};
+      final checkOutTimes = <String, String>{};
+      for (final entry in latestAttendance.entries) {
+        final record = entry.value;
+        final checkIn = formatAttendanceTime(record['check_in']);
+        final checkOut = formatAttendanceTime(record['check_out']);
+        if (checkIn != null) checkInTimes[entry.key] = checkIn;
+        if (checkOut != null) {
+          checkOutTimes[entry.key] = checkOut;
+        } else {
+          presentIds.add(entry.key);
+        }
+      }
 
       return (rows as List)
           .map(
             (row) => Employee.fromMap(
               row,
-              isCheckedIn:
-                  presentIds.contains(
-                row['id'].toString(),
-              ),
+              isCheckedIn: presentIds.contains(row['id'].toString()),
               checkInTime: checkInTimes[row['id'].toString()],
+              checkOutTime: checkOutTimes[row['id'].toString()],
             ),
           )
           .toList();
