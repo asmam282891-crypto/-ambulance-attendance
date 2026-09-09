@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_text_field.dart';
+import '../l10n/app_localizations.dart';
 
 class AddUserScreen extends StatefulWidget {
   const AddUserScreen({super.key});
@@ -20,22 +21,42 @@ class _AddUserScreenState extends State<AddUserScreen> {
   final _phoneController = TextEditingController();
   final _customJobTitleController = TextEditingController();
 
-  String _jobTitle = 'مسعف';
+  String _jobTitle = 'paramedic';
   String _role = 'paramedic';
   bool _isCustomJobTitle = false;
   bool _isSubmitting = false;
 
-  static const _jobTitles = <String, String>{
-    'طبيب': 'doctor',
-    'ممرض': 'nurse',
-    'ممرضة': 'nurse',
-    'مسعف': 'paramedic',
-    'سكرتارية': 'secretary',
-    'سائق': 'driver',
-    'صيدلي': 'pharmacist',
-    'أخرى': 'employee',
-    'مدير النظام': 'admin',
+  static const _jobTitles = <String>[
+    'doctor',
+    'nurse',
+    'paramedic',
+    'secretary',
+    'driver',
+    'pharmacist',
+    'employee',
+    'admin',
   };
+
+  String _jobTitleLabel(BuildContext context, String role) {
+    switch (role) {
+      case 'doctor':
+        return context.tr('roleDoctor');
+      case 'nurse':
+        return context.tr('roleNurse');
+      case 'paramedic':
+        return context.tr('roleParamedic');
+      case 'secretary':
+        return context.tr('roleSecretary');
+      case 'driver':
+        return context.tr('roleDriver');
+      case 'pharmacist':
+        return context.tr('rolePharmacist');
+      case 'admin':
+        return context.tr('roleAdmin');
+      default:
+        return context.tr('roleEmployee');
+    }
+  }
 
   @override
   void dispose() {
@@ -56,7 +77,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     try {
       final jobTitle = _isCustomJobTitle
           ? _customJobTitleController.text.trim()
-          : _jobTitle;
+          : _jobTitleLabel(context, _role);
       final role = _isCustomJobTitle ? 'employee' : _role;
 
       await SupabaseService.instance.createAttendanceUser(
@@ -71,7 +92,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إنشاء المستخدم وربطه بنظام الحضور ✅')),
+        SnackBar(content: Text(context.tr('userCreated'))),
       );
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
@@ -79,7 +100,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
       _showError(e.message);
     } catch (_) {
       if (!mounted) return;
-      _showError('تعذّر إنشاء المستخدم، حاول مجددًا');
+      _showError(context.tr('createUserFailed'));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -95,76 +116,84 @@ class _AddUserScreenState extends State<AddUserScreen> {
   }
 
   String? _required(String? value, String label) {
-    if (value == null || value.trim().isEmpty) return 'أدخل $label';
+    if (value == null || value.trim().isEmpty) {
+      return context.tr('enterField', {'field': label});
+    }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: Scaffold(
-        appBar: AppBar(title: const Text('إضافة مستخدم')),
+        appBar: AppBar(
+          title: Text(context.tr('addUserTitle')),
+          actions: const [LanguageToggleButton()],
+        ),
         body: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
               Text(
-                'بيانات مستخدم نظام الحضور',
+                context.tr('attendanceUserData'),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 6),
               Text(
-                'سيتمكن المستخدم من تسجيل الدخول باسم المستخدم وكلمة المرور.',
+                context.tr('loginInstruction'),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 20),
               AppTextField(
-                label: 'الاسم الكامل',
+                label: context.tr('fullName'),
                 controller: _fullNameController,
                 icon: Icons.badge_outlined,
-                validator: (value) => _required(value, 'الاسم الكامل'),
+                 validator: (value) => _required(value, context.tr('fullName')),
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'اسم المستخدم',
+                label: context.tr('username'),
                 controller: _usernameController,
                 icon: Icons.person_outline,
-                validator: (value) => _required(value, 'اسم المستخدم'),
+                validator: (value) => _required(value, context.tr('username')),
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'كلمة المرور',
+                label: context.tr('password'),
                 controller: _passwordController,
                 obscureText: true,
                 icon: Icons.lock_outline,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'أدخل كلمة المرور';
+                     return context.tr('enterField', {'field': context.tr('password')});
                   }
                   if (value.length < 6) {
-                    return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                     return context.tr('passwordMin');
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'الرقم الوظيفي',
+                label: context.tr('employeeNumber'),
                 controller: _employeeNumberController,
                 icon: Icons.numbers,
-                validator: (value) => _required(value, 'الرقم الوظيفي'),
+                validator: (value) =>
+                    _required(value, context.tr('employeeNumber')),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _jobTitle,
-                decoration: const InputDecoration(labelText: 'المسمى الوظيفي'),
-                items: _jobTitles.keys
+                 decoration: InputDecoration(
+                   labelText: context.tr('jobTitleLabel'),
+                 ),
+                 items: _jobTitles
                     .map(
-                      (title) => DropdownMenuItem(
-                        value: title,
-                        child: Text(title),
+                       (role) => DropdownMenuItem(
+                         value: role,
+                         child: Text(_jobTitleLabel(context, role)),
                       ),
                     )
                     .toList(),
@@ -174,23 +203,28 @@ class _AddUserScreenState extends State<AddUserScreen> {
                         if (value == null) return;
                         setState(() {
                           _jobTitle = value;
-                          _role = _jobTitles[value]!;
-                          _isCustomJobTitle = value == 'أخرى';
+                           _role = value;
+                           _isCustomJobTitle = value == 'employee';
                         });
                       },
               ),
               if (_isCustomJobTitle) ...[
                 const SizedBox(height: 16),
                 AppTextField(
-                  label: 'اكتب اسم الوظيفة',
+                   label: context.tr('customJobTitle'),
                   controller: _customJobTitleController,
                   icon: Icons.work_outline,
                   validator: (value) {
                     final title = value?.trim() ?? '';
-                    if (title.isEmpty) return 'أدخل اسم الوظيفة';
-                    if (title.length < 2) return 'اسم الوظيفة قصير جدًا';
+                     if (title.isEmpty) {
+                       return context.tr(
+                         'enterField',
+                         {'field': context.tr('jobTitle')},
+                       );
+                     }
+                     if (title.length < 2) return context.tr('jobTitleShort');
                     if (title.length > 100) {
-                      return 'اسم الوظيفة يجب ألا يتجاوز 100 حرف';
+                       return context.tr('jobTitleMax');
                     }
                     return null;
                   },
@@ -198,13 +232,13 @@ class _AddUserScreenState extends State<AddUserScreen> {
               ],
               const SizedBox(height: 16),
               AppTextField(
-                label: 'القسم (اختياري)',
+                label: context.tr('departmentOptional'),
                 controller: _departmentController,
                 icon: Icons.business_outlined,
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'رقم الهاتف (اختياري)',
+                label: context.tr('phoneOptional'),
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 icon: Icons.phone_outlined,
@@ -221,7 +255,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                           strokeWidth: 2.4,
                         ),
                       )
-                    : const Text('إنشاء المستخدم'),
+                    : Text(context.tr('createUser')),
               ),
             ],
           ),
