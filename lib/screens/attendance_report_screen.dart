@@ -1,4 +1,4 @@
-Import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -68,7 +68,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Directionality(
-            textDirection: AppLocaleController.instance.textDirection,
+          textDirection: AppLocaleController.instance.textDirection,
           child: child!,
         );
       },
@@ -137,17 +137,17 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     switch (status.toLowerCase()) {
       case 'present':
       case 'checked_in':
-      case 'ط­ط§ط¶ط±':
+      case 'حاضر':
         return context.tr('present');
       case 'checked_out':
       case 'departed':
-      case 'ط§ظ†طµط±ظپ':
+      case 'انصرف':
         return context.tr('departed');
       case 'absent':
-      case 'ط؛ط§ط¦ط¨':
+      case 'غائب':
         return context.tr('absentStatus');
       case 'unscheduled':
-      case 'ط؛ظٹط± ظ…ط¬ط¯ظˆظ„':
+      case 'غير مجدول':
         return context.tr('unscheduled');
       default:
         return status;
@@ -175,11 +175,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       _printing = true;
     });
 
-    // IMPORTANT: resolve every localized string using the *Flutter* BuildContext
-    // BEFORE building the pdf document. Inside pw.MultiPage's `build` callback the
-    // parameter is a pdf-package `pw.Context`, which shadows this widget's
-    // BuildContext and has no `tr()` method â€” calling context.tr(...) in there
-    // fails to compile.
     final centralSystemText = context.tr('centralSystem');
     final reportTitleText = context.tr('reportTitle');
     final recordsCountText = context.tr(
@@ -197,9 +192,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     try {
       final regularFont = await PdfGoogleFonts.amiriRegular();
       final boldFont = await PdfGoogleFonts.amiriBold();
-      final reportDate = DateFormat(
-        'yyyy/MM/dd',
-      ).format(_selectedDate);
+      final reportDate = DateFormat('yyyy/MM/dd').format(_selectedDate);
 
       final rows = _records.map((record) {
         return <String>[
@@ -238,7 +231,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   ),
                   pw.SizedBox(height: 6),
                   pw.Text(
-                    '$reportTitleText â€” $reportDate',
+                    '$reportTitleText — $reportDate',
                     textAlign: pw.TextAlign.center,
                     style: const pw.TextStyle(fontSize: 14),
                   ),
@@ -349,24 +342,15 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         body: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                8,
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _selectDate,
-                      icon: const Icon(
-                        Icons.calendar_month,
-                      ),
+                      icon: const Icon(Icons.calendar_month),
                       label: Text(
-                        DateFormat(
-                          'yyyy/MM/dd',
-                        ).format(_selectedDate),
+                        DateFormat('yyyy/MM/dd').format(_selectedDate),
                       ),
                     ),
                   ),
@@ -374,28 +358,19 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   IconButton(
                     onPressed: _loadReport,
                     tooltip: context.tr('refreshReport'),
-                    icon: const Icon(
-                      Icons.refresh,
-                    ),
+                    icon: const Icon(Icons.refresh),
                   ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
                   context.tr(
                     'reportDay',
-                    {
-                      'date': DateFormat(
-                        'yyyy/MM/dd',
-                      ).format(_selectedDate),
-                    },
+                    {'date': DateFormat('yyyy/MM/dd').format(_selectedDate)},
                   ),
                   style: const TextStyle(
                     fontSize: 16,
@@ -404,9 +379,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                 ),
               ),
             ),
-            Expanded(
-              child: _buildBody(),
-            ),
+            Expanded(child: _buildBody()),
           ],
         ),
       ),
@@ -415,9 +388,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -427,30 +398,23 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 60,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 60, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 context.tr('reportLoadError'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-              ),
+              Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 18),
               ElevatedButton.icon(
                 onPressed: _loadReport,
                 icon: const Icon(Icons.refresh),
-                  label: Text(context.tr('retry')),
+                label: Text(context.tr('retry')),
               ),
             ],
           ),
@@ -463,15 +427,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         onRefresh: _loadReport,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          // NOT const: this list contains a Text that calls context.tr(...),
-          // which is a runtime method call and cannot be a compile-time constant.
           children: [
             const SizedBox(height: 100),
-            const Icon(
-              Icons.event_busy,
-              size: 60,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.event_busy, size: 60, color: Colors.grey),
             const SizedBox(height: 16),
             Center(
               child: Text(
@@ -488,17 +446,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       onRefresh: _loadReport,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          8,
-          16,
-          24,
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         itemCount: _records.length,
-        itemBuilder: (
-          context,
-          index,
-        ) {
+        itemBuilder: (context, index) {
           final record = _records[index];
 
           final name = _getName(record);
@@ -512,20 +462,16 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
           final hasCheckIn = record['check_in'] != null;
           final hasCheckOut = record['check_out'] != null;
 
-           final isPresent = status == context.tr('present');
-           final isUnscheduled = status == context.tr('unscheduled');
-           final isCompleted = hasCheckOut ||
-               status == context.tr('departed');
+          final isPresent = status == context.tr('present');
+          final isUnscheduled = status == context.tr('unscheduled');
+          final isCompleted =
+              hasCheckOut || status == context.tr('departed');
 
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 920,
-              ),
+              constraints: const BoxConstraints(maxWidth: 920),
               child: Card(
-                margin: const EdgeInsets.only(
-                  bottom: 14,
-                ),
+                margin: const EdgeInsets.only(bottom: 14),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -535,9 +481,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                         children: [
                           const CircleAvatar(
                             radius: 25,
-                            child: Icon(
-                              Icons.person,
-                            ),
+                            child: Icon(Icons.person),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -551,9 +495,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(
-                                  height: 4,
-                                ),
+                                const SizedBox(height: 4),
                                 Text(
                                   jobTitle,
                                   style: TextStyle(
@@ -600,7 +542,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                           Expanded(
                             child: _TimeBox(
                               icon: Icons.login,
-                               title: context.tr('checkInTime'),
+                              title: context.tr('checkInTime'),
                               value: checkIn,
                               active: hasCheckIn,
                               iconColor: Colors.green,
@@ -610,7 +552,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                           Expanded(
                             child: _TimeBox(
                               icon: Icons.logout,
-                               title: context.tr('checkOutTime'),
+                              title: context.tr('checkOutTime'),
                               value: checkOut,
                               active: hasCheckOut,
                               iconColor: Colors.red,
@@ -652,9 +594,7 @@ class _TimeBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey.shade200,
-        ),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
