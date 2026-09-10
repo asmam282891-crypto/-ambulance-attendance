@@ -12,6 +12,21 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
 WidgetsFlutterBinding.ensureInitialized();
 
+  // مؤقت للتشخيص: يعرض نص الخطأ الحقيقي بدل المربع الرمادي الفاضي
+  // حتى في نسخة الـ release. لا تحذف هذا الجزء حتى نحل المشكلة نهائياً.
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Container(
+      color: Colors.white,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        details.exceptionAsString(),
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.red, fontSize: 13),
+      ),
+    );
+  };
+
 await Supabase.initialize(
 url: 'https://vdqsdoyqpxuiiznaruuj.supabase.co',
 anonKey:
