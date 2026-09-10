@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'services/supabase_service.dart';
+import 'models/employee.dart';
 import 'screens/login_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
@@ -52,36 +53,59 @@ title: 'نظام الإسعاف المركزي',
 }
 }
 
-class _SessionGate extends StatelessWidget {
-const _SessionGate();
+class _SessionGate extends StatefulWidget {
+  const _SessionGate();
 
-@override
-Widget build(BuildContext context) {
-return FutureBuilder(
-future: SupabaseService.instance.currentEmployee(),
-builder: (context, snapshot) {
-if (snapshot.connectionState != ConnectionState.done) {
-return const Scaffold(
-backgroundColor: Colors.white,
-body: Center(
-child: CircularProgressIndicator(),
-),
-);
+  @override
+  State<_SessionGate> createState() => _SessionGateState();
 }
 
-    final employee = snapshot.data;
+class _SessionGateState extends State<_SessionGate> {
+  late final Future<Employee?> _employeeFuture;
 
-    if (employee == null) {
-      return const LoginScreen();
+  @override
+  void initState() {
+    super.initState();
+    _employeeFuture = _loadEmployee();
+  }
+
+  Future<Employee?> _loadEmployee() async {
+    try {
+      return await SupabaseService.instance.currentEmployee().timeout(
+        const Duration(seconds: 8),
+      );
+    } catch (_) {
+      // If Supabase is unavailable, let the user reach the login screen.
+      return null;
     }
+  }
 
-    if (employee.isAdmin) {
-      return const AdminDashboardScreen();
-    }
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Employee?>(
+      future: _employeeFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
-    return AttendanceScreen(employee: employee);
-  },
-);
+        final employee = snapshot.data;
 
-}
+        if (employee == null) {
+          return const LoginScreen();
+        }
+
+        if (employee.isAdmin) {
+          return const AdminDashboardScreen();
+        }
+
+        return AttendanceScreen(employee: employee);
+      },
+    );
+  }
 }
