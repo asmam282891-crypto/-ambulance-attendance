@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'services/supabase_service.dart';
@@ -48,6 +49,14 @@ title: AppLocaleController.instance.text('appTitle'),
   locale: const Locale('ar'),
   supportedLocales: const [
     Locale('ar'),
+  ],
+
+  // ضروري حتى تعمل عناصر مثل TextField بدون انهيار (Null check operator)
+  // لأنها تحتاج داخلياً إلى MaterialLocalizations.
+  localizationsDelegates: const [
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
   ],
 
   // اتجاه التطبيق من اليمين إلى اليسار
