@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'services/supabase_service.dart';
 import 'models/employee.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/login_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
@@ -26,7 +27,7 @@ const AmbulanceAttendanceApp({super.key});
 @override
 Widget build(BuildContext context) {
 return MaterialApp(
-title: 'نظام الإسعاف المركزي',
+title: AppLocaleController.instance.text('appTitle'),
 
   // اللغة العربية فقط
   locale: const Locale('ar'),
@@ -37,7 +38,7 @@ title: 'نظام الإسعاف المركزي',
   // اتجاه التطبيق من اليمين إلى اليسار
   builder: (context, child) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: child ?? const SizedBox.shrink(),
     );
   },
