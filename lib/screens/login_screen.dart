@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'يرجى إدخال اسم المستخدم وكلمة المرور');
+      setState(() => _errorMessage = context.tr('invalidFields'));
       return;
     }
 
