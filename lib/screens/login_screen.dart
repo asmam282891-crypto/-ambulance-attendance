@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/employee.dart';
 import '../services/supabase_service.dart';
+import '../l10n/app_localizations.dart';
 import 'attendance_screen.dart';
 import 'admin_dashboard_screen.dart';
 
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLocaleController.instance.textDirection,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
@@ -91,8 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text('🚑', style: TextStyle(fontSize: 38)),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'نظام حضور الإسعاف المركزي',
+                  Text(
+                    context.tr('appTitle'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 20,
@@ -101,8 +102,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'سجّل دخولك لمتابعة الحضور والانصراف',
+                  Text(
+                    context.tr('loginSubtitle'),
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13, color: Colors.grey),
                   ),
@@ -112,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: _usernameController,
                     decoration: InputDecoration(
-                      labelText: 'اسم المستخدم',
+                      labelText: context.tr('username'),
                       prefixIcon: const Icon(Icons.person_outline),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -130,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'كلمة المرور',
+                      labelText: context.tr('password'),
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -195,8 +196,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 strokeWidth: 2.4,
                               ),
                             )
-                          : const Text(
-                              'تسجيل الدخول',
+                          : Text(
+                              context.tr('login'),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
