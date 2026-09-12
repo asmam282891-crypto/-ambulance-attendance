@@ -146,6 +146,18 @@ class _AdminDashboardScreenState
     );
   }
 
+  // فتح تقرير شهري لموظف واحد (كام يوم حضر)
+  void _openMonthlyAttendanceReport(Employee employee) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MonthlyAttendanceReportScreen(
+          employeeId: employee.id,
+          employeeName: employee.fullName,
+        ),
+      ),
+    );
+  }
+
   Future<void> _editEmployeeSchedule(Employee employee) async {
     final selected = employee.workDays.toSet();
     final result = await showDialog<Set<int>>(
@@ -615,11 +627,6 @@ class _AdminDashboardScreenState
     return Container(
       margin:
           const EdgeInsets.only(bottom: 10),
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
-      ),
       decoration:
           BoxDecoration(
         color: AppColors.surface,
@@ -630,135 +637,152 @@ class _AdminDashboardScreenState
           color: AppColors.border,
         ),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor:
-                AppColors.ambulanceRed
-                    .withOpacity(0.1),
-            child: Text(
-              employee.fullName.isNotEmpty
-                  ? employee.fullName[0]
-                  : '؟',
-              style:
-                  const TextStyle(
-                color:
-                    AppColors.ambulanceRed,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _openMonthlyAttendanceReport(employee),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 10,
           ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  employee.title,
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor:
+                    AppColors.ambulanceRed
+                        .withOpacity(0.1),
+                child: Text(
+                  employee.fullName.isNotEmpty
+                      ? employee.fullName[0]
+                      : '؟',
                   style:
                       const TextStyle(
+                    color:
+                        AppColors.ambulanceRed,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      employee.title,
+                      style:
+                          const TextStyle(
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    Text(
+                      employee.roleLabel,
+                      style:
+                          Theme.of(context)
+                              .textTheme
+                              .bodySmall,
+                    ),
+
+                    if (employee.checkInTime != null)
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(
+                          top: 2,
+                        ),
+                        child: Text(
+                           '⏰ ${context.tr('checkInLabel')}: ${employee.checkInTime}',
+                          style:
+                              const TextStyle(
+                            fontSize: 11,
+                            color:
+                                AppColors.success,
+                            fontWeight:
+                                FontWeight.w500,
+                          ),
+                        ),
+                      ),
+
+                    if (employee.checkOutTime != null)
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(
+                          top: 2,
+                        ),
+                        child: Text(
+                           '🚪 ${context.tr('checkOutLabel')}: ${employee.checkOutTime}',
+                          style:
+                              const TextStyle(
+                            fontSize: 11,
+                            color:
+                                AppColors.textSecondary,
+                            fontWeight:
+                                FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration:
+                    BoxDecoration(
+                  color: employee.isCheckedIn
+                      ? AppColors.successBg
+                      : hasCheckedOut
+                          ? Colors.grey.shade200
+                          : AppColors.dangerBg,
+                  borderRadius:
+                      BorderRadius.circular(20),
+                ),
+                child: Text(
+                  employee.isCheckedIn
+                       ? context.tr('present')
+                      : hasCheckedOut
+                           ? context.tr('departed')
+                           : context.tr('absentStatus'),
+                  style:
+                      TextStyle(
+                    fontSize: 12,
                     fontWeight:
                         FontWeight.w600,
+                    color: employee.isCheckedIn
+                        ? AppColors.success
+                        : hasCheckedOut
+                            ? AppColors.textSecondary
+                            : AppColors.danger,
                   ),
                 ),
-
-                Text(
-                  employee.roleLabel,
-                  style:
-                      Theme.of(context)
-                          .textTheme
-                          .bodySmall,
-                ),
-
-                if (employee.checkInTime != null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(
-                      top: 2,
-                    ),
-                    child: Text(
-                       '⏰ ${context.tr('checkInLabel')}: ${employee.checkInTime}',
-                      style:
-                          const TextStyle(
-                        fontSize: 11,
-                        color:
-                            AppColors.success,
-                        fontWeight:
-                            FontWeight.w500,
-                      ),
-                    ),
-                  ),
-
-                if (employee.checkOutTime != null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(
-                      top: 2,
-                    ),
-                    child: Text(
-                       '🚪 ${context.tr('checkOutLabel')}: ${employee.checkOutTime}',
-                      style:
-                          const TextStyle(
-                        fontSize: 11,
-                        color:
-                            AppColors.textSecondary,
-                        fontWeight:
-                            FontWeight.w500,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          Container(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 4,
-            ),
-            decoration:
-                BoxDecoration(
-              color: employee.isCheckedIn
-                  ? AppColors.successBg
-                  : hasCheckedOut
-                      ? Colors.grey.shade200
-                      : AppColors.dangerBg,
-              borderRadius:
-                  BorderRadius.circular(20),
-            ),
-            child: Text(
-              employee.isCheckedIn
-                   ? context.tr('present')
-                  : hasCheckedOut
-                       ? context.tr('departed')
-                       : context.tr('absentStatus'),
-              style:
-                  TextStyle(
-                fontSize: 12,
-                fontWeight:
-                    FontWeight.w600,
-                color: employee.isCheckedIn
-                    ? AppColors.success
-                    : hasCheckedOut
-                        ? AppColors.textSecondary
-                        : AppColors.danger,
               ),
-            ),
-          ),
 
-           IconButton(
-             onPressed: () => _editEmployeeSchedule(employee),
-             icon: const Icon(Icons.calendar_month_outlined),
-              tooltip: context.tr('editWorkDays'),
-             color: AppColors.navy,
-           ),
-        ],
+              IconButton(
+                onPressed: () => _openMonthlyAttendanceReport(employee),
+                icon: const Icon(Icons.bar_chart_rounded),
+                tooltip: context.tr('monthlyReport'),
+                color: AppColors.ambulanceRed,
+              ),
+
+              IconButton(
+                onPressed: () => _editEmployeeSchedule(employee),
+                icon: const Icon(Icons.calendar_month_outlined),
+                tooltip: context.tr('editWorkDays'),
+                color: AppColors.navy,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
