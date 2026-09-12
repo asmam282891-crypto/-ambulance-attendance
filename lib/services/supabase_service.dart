@@ -388,7 +388,43 @@ class SupabaseService {
       throw ApiException(e.message);
     }
   }
+cat << 'EOF'
+  // ================================================================
+  // تقرير شهري لموظف واحد (كام يوم حضر خلال فترة معينة)
+  // ================================================================
 
+  Future<Map<String, dynamic>?> fetchEmployeeMonthlySummary({
+    required String userId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      String formatDate(DateTime date) =>
+          '${date.year.toString().padLeft(4, '0')}-'
+          '${date.month.toString().padLeft(2, '0')}-'
+          '${date.day.toString().padLeft(2, '0')}';
+
+      final result = await _client.rpc(
+        'attendance_user_monthly_summary',
+        params: {
+          'p_user_id': userId,
+          'p_start_date': formatDate(startDate),
+          'p_end_date': formatDate(endDate),
+        },
+      );
+
+      if (result == null) return null;
+
+      final rows = result as List;
+      if (rows.isEmpty) return null;
+
+      return Map<String, dynamic>.from(rows.first);
+    } on PostgrestException catch (e) {
+      throw ApiException(e.message);
+    }
+  }
+
+EOF
   // ================================================================
   // إنشاء موظف
   // ================================================================
