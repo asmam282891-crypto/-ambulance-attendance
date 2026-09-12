@@ -11,6 +11,7 @@ import 'attendance_report_screen.dart';
 import 'login_screen.dart';
 import 'qr_scan_screen.dart';
 import 'attendance_qr_screen.dart';
+import 'monthly_attendance_report_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
