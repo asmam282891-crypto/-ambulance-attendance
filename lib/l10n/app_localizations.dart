@@ -56,6 +56,7 @@ const Map<String, String> _translations = {
     'scanBarcode': 'مسح الباركود',
     'employeeQrPrint': 'عرض باركود الموظفين للطباعة',
     'attendanceReport': 'سجل الحضور والانصراف',
+    'monthlyAttendanceReport': 'تقرير موظف - عدد أيام الحضور',
     'searchEmployee': 'البحث عن موظف...',
     'presentNow': 'الحاضرون الآن',
     'absent': 'غير الحاضرين',
