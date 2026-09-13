@@ -5,8 +5,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-enum ReportType { daily, monthly, employee, absent, late }
-
 class AttendanceReportScreen extends StatefulWidget {
   const AttendanceReportScreen({Key? key}) : super(key: key);
 
@@ -15,17 +13,13 @@ class AttendanceReportScreen extends StatefulWidget {
 }
 
 class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
-  ReportType _selectedReportType = ReportType.daily;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _officialStartTime = const TimeOfDay(hour: 8, minute: 0);
   bool _loading = false;
   bool _printing = false;
   String? _error;
 
-  // القائمة الكاملة للسجلات
-  List<Map<String, dynamic>> _allRecords = [];
-  // السجلات المفلترة بناءً على نوع التقرير
-  List<Map<String, dynamic>> _filteredRecords = [];
+  final List<Map<String, dynamic>> _records = [];
 
   @override
   void initState() {
@@ -40,9 +34,8 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     });
 
     try {
-      // TODO: قم باستدعاء بيانات السجلات الخاصة بك من API أو Database هنا
+      // TODO: قم باستدعاء البيانات الخاصة بك هنا ووضعها في _records
       await Future.delayed(const Duration(milliseconds: 500));
-      _applyReportFilter();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -51,49 +44,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
           _loading = false;
         });
       }
-    }
-  }
-
-  // فلترة السجلات بناءً على نوع التقرير المختار
-  void _applyReportFilter() {
-    setState(() {
-      switch (_selectedReportType) {
-        case ReportType.daily:
-          _filteredRecords = List.from(_allRecords);
-          break;
-        case ReportType.absent:
-          _filteredRecords = _allRecords
-              .where((r) => _getStatus(r) == 'غائب')
-              .toList();
-          break;
-        case ReportType.late:
-          _filteredRecords = _allRecords
-              .where((r) => _formatDelay(r['check_in']) != 'لا يوجد' && _formatDelay(r['check_in']) != '-')
-              .toList();
-          break;
-        case ReportType.monthly:
-        case ReportType.employee:
-          _filteredRecords = List.from(_allRecords);
-          break;
-      }
-    });
-  }
-
-  String _getReportTitle() {
-    final formattedDate = DateFormat('yyyy/MM/dd').format(_selectedDate);
-    final formattedMonth = DateFormat('yyyy/MM').format(_selectedDate);
-
-    switch (_selectedReportType) {
-      case ReportType.daily:
-        return 'تقرير الحضور اليومي — $formattedDate';
-      case ReportType.monthly:
-        return 'التقرير الشهري — $formattedMonth';
-      case ReportType.absent:
-        return 'تقرير الغياب — $formattedDate';
-      case ReportType.late:
-        return 'تقرير التأخيرات — $formattedDate';
-      case ReportType.employee:
-        return 'تقرير حضور موظف — $formattedDate';
     }
   }
 
@@ -120,7 +70,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     if (picked != null && picked != _officialStartTime) {
       setState(() {
         _officialStartTime = picked;
-        _applyReportFilter();
       });
     }
   }
@@ -240,9 +189,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       return;
     }
 
-    if (_filteredRecords.isEmpty) {
+    if (_records.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا توجد بيانات للطباعة في هذا التقرير')),
+        const SnackBar(content: Text('لا توجد بيانات للطباعة')),
       );
       return;
     }
@@ -254,8 +203,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     try {
       final regularFont = await PdfGoogleFonts.amiriRegular();
       final boldFont = await PdfGoogleFonts.amiriBold();
+      final reportDate = DateFormat('yyyy/MM/dd').format(_selectedDate);
 
-      final rows = _filteredRecords.map((record) {
+      final rows = _records.map((record) {
         return <String>[
           _formatDelay(record['check_in']),
           _getStatus(record),
@@ -291,13 +241,13 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   ),
                   pw.SizedBox(height: 6),
                   pw.Text(
-                    _getReportTitle(),
+                    'تقرير الحضور واليومي — $reportDate',
                     textAlign: pw.TextAlign.center,
                     style: const pw.TextStyle(fontSize: 14),
                   ),
                   pw.SizedBox(height: 18),
                   pw.Text(
-                    'إجمالي السجلات: ${_filteredRecords.length}',
+                    'عدد السجلات: ${_records.length}',
                     textAlign: pw.TextAlign.right,
                     style: const pw.TextStyle(fontSize: 11),
                   ),
@@ -356,7 +306,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
       await Printing.layoutPdf(
         onLayout: (_) => document.save(),
-        name: 'report-${DateFormat('yyyyMMdd').format(_selectedDate)}',
+        name: 'attendance-report-$reportDate',
       );
     } catch (e) {
       if (!mounted) return;
@@ -382,14 +332,14 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('نظام التقارير الشاملة'),
+          title: const Text('تقرير الحضور واليومي'),
           centerTitle: true,
           backgroundColor: const Color(0xFFD32F2F),
           foregroundColor: Colors.white,
           actions: [
             IconButton(
               onPressed: _printing ? null : _printReport,
-              tooltip: 'طباعة التقرير الحالية',
+              tooltip: 'طباعة التقرير',
               icon: _printing
                   ? const SizedBox(
                       width: 20,
@@ -405,26 +355,8 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         ),
         body: Column(
           children: [
-            // شريط اختيار نوع التقرير
-            Container(
-              height: 50,
-              margin: const EdgeInsets.only(top: 12),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: [
-                  _buildReportChip(ReportType.daily, 'اليومي'),
-                  _buildReportChip(ReportType.monthly, 'الشهري'),
-                  _buildReportChip(ReportType.late, 'التأخيرات'),
-                  _buildReportChip(ReportType.absent, 'الغياب'),
-                  _buildReportChip(ReportType.employee, 'حضور موظف'),
-                ],
-              ),
-            ),
-
-            // أدوات اختيار التاريخ والوقت
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
                   Expanded(
@@ -439,7 +371,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   const SizedBox(width: 10),
                   IconButton(
                     onPressed: _loadReport,
-                    tooltip: 'تحديث البيانات',
+                    tooltip: 'تحديث التقرير',
                     icon: const Icon(Icons.refresh),
                   ),
                 ],
@@ -462,13 +394,13 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  _getReportTitle(),
+                  'تقرير يوم: ${DateFormat('yyyy/MM/dd').format(_selectedDate)}',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -477,30 +409,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
             Expanded(child: _buildBody()),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildReportChip(ReportType type, String label) {
-    final isSelected = _selectedReportType == type;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: isSelected,
-        selectedColor: const Color(0xFFD32F2F),
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-        onSelected: (selected) {
-          if (selected) {
-            setState(() {
-              _selectedReportType = type;
-            });
-            _applyReportFilter();
-          }
-        },
       ),
     );
   }
@@ -543,7 +451,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       );
     }
 
-    if (_filteredRecords.isEmpty) {
+    if (_records.isEmpty) {
       return RefreshIndicator(
         onRefresh: _loadReport,
         child: ListView(
@@ -554,7 +462,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
             SizedBox(height: 16),
             Center(
               child: Text(
-                'لا توجد سجلات تنطبق على هذا التقرير',
+                'لا توجد سجلات حضور لهذا اليوم',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -568,9 +476,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        itemCount: _filteredRecords.length,
+        itemCount: _records.length,
         itemBuilder: (context, index) {
-          final record = _filteredRecords[index];
+          final record = _records[index];
 
           final name = _getName(record);
           final jobTitle = _getJobTitle(record);
@@ -686,7 +594,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                         icon: Icons.timer_outlined,
                         title: 'مدة التأخير',
                         value: delay,
-                        active: delay != '-' && delay != 'لا يوجد',
+                        active: delay != '-',
                         iconColor: Colors.orange,
                       ),
                     ],
