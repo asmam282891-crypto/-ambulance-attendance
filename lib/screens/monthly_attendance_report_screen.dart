@@ -24,7 +24,7 @@ class _MonthlyAttendanceReportScreenState
   bool _loadingSummary = false;
   String? _error;
 
-  List<Employee> _employees = [];
+  List<Employee> _employees = <Employee>[];
   Employee? _selectedEmployee;
 
   late DateTime _startDate;
@@ -254,8 +254,8 @@ class _MonthlyAttendanceReportScreenState
           hint: const Text('اختر الموظف'),
           value: _selectedEmployee,
           items: _employees
-              .map(
-                (employee) => DropdownMenuItem<Employee>(
+              .map<DropdownMenuItem<Employee>>(
+                (Employee employee) => DropdownMenuItem<Employee>(
                   value: employee,
                   child: Text(
                     '${employee.fullName} — ${employee.roleLabel}',
@@ -263,7 +263,7 @@ class _MonthlyAttendanceReportScreenState
                 ),
               )
               .toList(),
-          onChanged: (value) {
+          onChanged: (Employee? value) {
             setState(() {
               _selectedEmployee = value;
               _summary = null;
