@@ -222,10 +222,13 @@ class _MonthlyAttendanceReportScreenState
                         ),
                         const SizedBox(height: 24),
                         if (_error != null)
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.red),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ),
                         if (_summary != null) _buildSummary(),
                       ],
@@ -273,16 +276,21 @@ class _MonthlyAttendanceReportScreenState
 
   Widget _buildSummary() {
     final summary = _summary!;
-    final fullName = (summary['full_name'] ?? '').toString();
-    final jobTitle = (summary['job_title'] ?? '').toString();
-    final presentDays = (summary['present_days'] ?? 0) as num;
-    final absentDays = (summary['absent_days'] ?? 0) as num;
-    final workDaysCount = (summary['work_days_count'] ?? 0) as num;
+    final fullName = (summary['full_name'] ?? _selectedEmployee?.fullName ?? '').toString();
+    final jobTitle = (summary['job_title'] ?? _selectedEmployee?.roleLabel ?? '').toString();
+    
+    final num presentDays = summary['present_days'] ?? summary['presentDays'] ?? 0;
+    final num absentDays = summary['absent_days'] ?? summary['absentDays'] ?? 0;
+    final num workDaysCount = summary['work_days_count'] ?? summary['workDaysCount'] ?? 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
