@@ -80,7 +80,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
           : _jobTitleLabel(context, _role);
       final role = _isCustomJobTitle ? 'employee' : _role;
 
-      // إنشاء حساب المستخدم في Supabase
+      // إنشاء حساب المستخدم عبر خدمة Supabase
       await SupabaseService.instance.createAttendanceUser(
         username: _usernameController.text.trim(),
         password: _passwordController.text,
@@ -127,7 +127,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: AppLocaleController.instance.textDirection,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.tr('addUserTitle')),
