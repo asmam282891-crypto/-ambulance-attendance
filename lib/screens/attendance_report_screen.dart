@@ -28,6 +28,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
   List<Map<String, dynamic>> _allRecords = [];
   List<Map<String, dynamic>> _filteredRecords = [];
+  List<String> _employeeNamesList = [];
 
   @override
   void initState() {
@@ -42,10 +43,14 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     });
 
     try {
-      // جلب السجلات مباشرة من خدمة Supabase
+      // 1. جلب سجلات الحضور من الخدمة
       _allRecords = await SupabaseService.instance.getAttendanceReport(
         date: _selectedDate,
       );
+
+      // 2. تجميع وتحديث قائمة الموظفين المتاحة
+      _updateEmployeeNamesList();
+
       _applyReportFilter();
     } catch (e) {
       _error = e.toString();
@@ -56,6 +61,15 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         });
       }
     }
+  }
+
+  void _updateEmployeeNamesList() {
+    final namesSet = _allRecords
+        .map((r) => _getName(r))
+        .where((name) => name != 'غير معروف' && name.trim().isNotEmpty)
+        .toSet();
+
+    _employeeNamesList = namesSet.toList()..sort();
   }
 
   void _applyReportFilter() {
@@ -210,6 +224,19 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   }
 
   String _getName(Map<String, dynamic> record) {
+    // التحقق من العلاقة مع جدول الموظفين (profiles / users)
+    if (record['profiles'] != null && record['profiles'] is Map) {
+      final profile = record['profiles'] as Map<String, dynamic>;
+      final name = profile['full_name'] ?? profile['name'] ?? profile['username'];
+      if (name != null && name.toString().isNotEmpty) return name.toString();
+    }
+    if (record['users'] != null && record['users'] is Map) {
+      final user = record['users'] as Map<String, dynamic>;
+      final name = user['full_name'] ?? user['name'] ?? user['username'];
+      if (name != null && name.toString().isNotEmpty) return name.toString();
+    }
+
+    // القراءة المباشرة من الحقل
     return (record['full_name'] ??
             record['fullName'] ??
             record['name'] ??
@@ -219,6 +246,17 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   }
 
   String _getJobTitle(Map<String, dynamic> record) {
+    if (record['profiles'] != null && record['profiles'] is Map) {
+      final profile = record['profiles'] as Map<String, dynamic>;
+      final title = profile['job_title'] ?? profile['role'];
+      if (title != null && title.toString().isNotEmpty) return title.toString();
+    }
+    if (record['users'] != null && record['users'] is Map) {
+      final user = record['users'] as Map<String, dynamic>;
+      final title = user['job_title'] ?? user['role'];
+      if (title != null && title.toString().isNotEmpty) return title.toString();
+    }
+
     return (record['job_title'] ??
             record['jobTitle'] ??
             record['role'] ??
@@ -257,12 +295,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       default:
         return status;
     }
-  }
-
-  List<String> _getUniqueEmployeeNames() {
-    final names = _allRecords.map((r) => _getName(r)).toSet().toList();
-    names.sort();
-    return names;
   }
 
   Future<void> _printReport() async {
@@ -413,8 +445,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final employeeNames = _getUniqueEmployeeNames();
-
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
@@ -467,7 +497,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  items: employeeNames
+                  items: _employeeNamesList
                       .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),
                   onChanged: (val) {
