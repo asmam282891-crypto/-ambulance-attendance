@@ -80,16 +80,18 @@ class _AddUserScreenState extends State<AddUserScreen> {
           : _jobTitleLabel(context, _role);
       final role = _isCustomJobTitle ? 'employee' : _role;
 
+      // إنشاء حساب المستخدم في Supabase
       await SupabaseService.instance.createAttendanceUser(
-        username: _usernameController.text,
+        username: _usernameController.text.trim(),
         password: _passwordController.text,
-        fullName: _fullNameController.text,
-        employeeNumber: _employeeNumberController.text,
+        fullName: _fullNameController.text.trim(),
+        employeeNumber: _employeeNumberController.text.trim(),
         jobTitle: jobTitle,
         role: role,
-        department: _departmentController.text,
-        phone: _phoneController.text,
+        department: _departmentController.text.trim(),
+        phone: _phoneController.text.trim(),
       );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.tr('userCreated'))),
@@ -98,7 +100,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       _showError(e.message);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       _showError(context.tr('createUserFailed'));
     } finally {
