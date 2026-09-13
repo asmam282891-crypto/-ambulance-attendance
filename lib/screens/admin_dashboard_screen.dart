@@ -26,7 +26,7 @@ class _AdminDashboardScreenState
     extends State<AdminDashboardScreen> {
   final _searchController = TextEditingController();
 
-  List<Employee> _employees = [];
+  List<Employee> _employees = <Employee>[];
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -570,10 +570,10 @@ class _AdminDashboardScreenState
   }
 
   List<Employee> get _presentEmployees =>
-      _employees.where((employee) => employee.isCheckedIn).toList();
+      _employees.where((Employee employee) => employee.isCheckedIn).toList();
 
   List<Employee> get _absentEmployees =>
-      _employees.where((employee) => !employee.isCheckedIn).toList();
+      _employees.where((Employee employee) => !employee.isCheckedIn).toList();
 
   Widget _buildEmployeeSectionHeader({
     required String title,
