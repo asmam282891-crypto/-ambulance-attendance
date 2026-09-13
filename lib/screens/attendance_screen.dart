@@ -1,595 +1,739 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
-import '../models/employee.dart';
-import '../services/supabase_service.dart';
-import '../services/location_service.dart';
-import '../theme/app_theme.dart';
-import '../l10n/app_localizations.dart';
-import 'qr_scan_screen.dart';
-import 'login_screen.dart';
-
-enum _LocationState {
-  checking,
-  inRange,
-  outOfRange,
-  error,
-}
-
-class AttendanceScreen extends StatefulWidget {
-  final Employee employee;
-
-  const AttendanceScreen({
-    super.key,
-    required this.employee,
-  });
+class EmployeeAttendanceReportScreen extends StatefulWidget {
+  const EmployeeAttendanceReportScreen({Key? key}) : super(key: key);
 
   @override
-  State<AttendanceScreen> createState() =>
-      _AttendanceScreenState();
+  State<EmployeeAttendanceReportScreen> createState() =>
+      _EmployeeAttendanceReportScreenState();
 }
 
-class _AttendanceScreenState
-    extends State<AttendanceScreen> {
-  _LocationState _locationState =
-      _LocationState.checking;
+class _EmployeeAttendanceReportScreenState
+    extends State<EmployeeAttendanceReportScreen> {
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _officialStartTime = const TimeOfDay(hour: 8, minute: 0);
+  bool _loading = false;
+  bool _printing = false;
+  String? _error;
 
-  Position? _position;
+  // قائمة الموظفين لاختيار موظف محدد
+  List<Map<String, dynamic>> _employeesList = [];
+  Map<String, dynamic>? _selectedEmployee;
 
-  bool _isCheckedIn = false;
-
-  String? _checkInTime;
-
-  String? _checkOutTime;
-
-  bool _isSubmitting = false;
-
-  String? _feedback;
+  // سجلات الموظف المحدد فقط
+  List<Map<String, dynamic>> _records = [];
 
   @override
   void initState() {
     super.initState();
-
-    _isCheckedIn =
-        widget.employee.isCheckedIn;
-
-    _checkInTime =
-        widget.employee.checkInTime;
-
-    _checkOutTime =
-        widget.employee.checkOutTime;
-
-    _loadSettingsAndLocation();
+    _fetchEmployeesAndReport();
   }
 
-  Future<void> _loadSettingsAndLocation() async {
-    if (!mounted) return;
-
+  Future<void> _fetchEmployeesAndReport() async {
     setState(() {
-      _locationState =
-          _LocationState.checking;
+      _loading = true;
+      _error = null;
     });
 
     try {
-      final settings =
-          await SupabaseService.instance
-              .fetchAttendanceSettings();
+      // TODO: استدعِ قائمة الموظفين هنا وحسّن الربط مع الـ API الخاص بك
+      // مثال وهمي للموظفين:
+      /*
+      _employeesList = [
+        {'id': '1', 'full_name': 'أحمد محمد', 'job_title': 'مسعف'},
+        {'id': '2', 'full_name': 'سارة خالد', 'job_title': 'طبيب طوارئ'},
+      ];
+      if (_employeesList.isNotEmpty && _selectedEmployee == null) {
+        _selectedEmployee = _employeesList.first;
+      }
+      */
 
-      final position =
-          await LocationService
-              .getCurrentPosition();
+      // TODO: استدعِ سجلات الموظف المحدد فقط بناءً على _selectedEmployee['id'] و _selectedDate
+      await Future.delayed(const Duration(milliseconds: 500));
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
 
-      final inRange =
-          LocationService.isWithinRange(
-        position,
-        settings,
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      _fetchEmployeesAndReport();
+    }
+  }
+
+  Future<void> _pickOfficialStartTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _officialStartTime,
+    );
+    if (picked != null && picked != _officialStartTime) {
+      setState(() {
+        _officialStartTime = picked;
+      });
+    }
+  }
+
+  String _formatTime(dynamic timeValue) {
+    if (timeValue == null) return '-';
+    if (timeValue is String) {
+      if (timeValue.trim().isEmpty) return '-';
+      try {
+        final parsed = DateTime.parse(timeValue);
+        return DateFormat('hh:mm a').format(parsed);
+      } catch (_) {
+        return timeValue;
+      }
+    }
+    if (timeValue is DateTime) {
+      return DateFormat('hh:mm a').format(timeValue);
+    }
+    return timeValue.toString();
+  }
+
+  String _formatDelay(dynamic checkInValue) {
+    if (checkInValue == null) return '-';
+    DateTime? checkInTime;
+
+    if (checkInValue is DateTime) {
+      checkInTime = checkInValue;
+    } else if (checkInValue is String && checkInValue.trim().isNotEmpty) {
+      try {
+        checkInTime = DateTime.parse(checkInValue);
+      } catch (_) {
+        return '-';
+      }
+    }
+
+    if (checkInTime == null) return '-';
+
+    final officialDateTime = DateTime(
+      checkInTime.year,
+      checkInTime.month,
+      checkInTime.day,
+      _officialStartTime.hour,
+      _officialStartTime.minute,
+    );
+
+    if (checkInTime.isAfter(officialDateTime)) {
+      final difference = checkInTime.difference(officialDateTime);
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes.remainder(60);
+
+      if (hours > 0) {
+        return '$hours س $minutes د';
+      }
+      return '$minutes دقيقة';
+    }
+
+    return 'لا يوجد';
+  }
+
+  String _getName(Map<String, dynamic> record) {
+    return (record['full_name'] ??
+            record['fullName'] ??
+            record['name'] ??
+            record['username'] ??
+            _selectedEmployee?['full_name'] ??
+            'غير معروف')
+        .toString();
+  }
+
+  String _getJobTitle(Map<String, dynamic> record) {
+    return (record['job_title'] ??
+            record['jobTitle'] ??
+            record['role'] ??
+            _selectedEmployee?['job_title'] ??
+            '-')
+        .toString();
+  }
+
+  String _getStatus(Map<String, dynamic> record) {
+    final status = record['status']?.toString().trim();
+
+    if (status == null || status.isEmpty) {
+      if (record['check_in'] != null && record['check_out'] == null) {
+        return 'حاضر';
+      }
+      if (record['check_in'] != null && record['check_out'] != null) {
+        return 'انصرف';
+      }
+      return '-';
+    }
+
+    switch (status.toLowerCase()) {
+      case 'present':
+      case 'checked_in':
+      case 'حاضر':
+        return 'حاضر';
+      case 'checked_out':
+      case 'departed':
+      case 'انصرف':
+        return 'انصرف';
+      case 'absent':
+      case 'غائب':
+        return 'غائب';
+      case 'unscheduled':
+      case 'غير مجدول':
+        return 'غير مجدول';
+      default:
+        return status;
+    }
+  }
+
+  Future<void> _printReport() async {
+    if (_printing) return;
+
+    if (_loading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى الانتظار لحين اكتمال التحميل')),
+      );
+      return;
+    }
+
+    if (_records.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا توجد بيانات للطباعة لهذا الموظف')),
+      );
+      return;
+    }
+
+    setState(() {
+      _printing = true;
+    });
+
+    try {
+      final regularFont = await PdfGoogleFonts.amiriRegular();
+      final boldFont = await PdfGoogleFonts.amiriBold();
+      final reportDate = DateFormat('yyyy/MM/dd').format(_selectedDate);
+
+      final employeeName = _selectedEmployee != null
+          ? _getName(_selectedEmployee!)
+          : (_records.isNotEmpty ? _getName(_records.first) : 'غير معروف');
+
+      final jobTitle = _selectedEmployee != null
+          ? _getJobTitle(_selectedEmployee!)
+          : (_records.isNotEmpty ? _getJobTitle(_records.first) : '-');
+
+      final rows = _records.map((record) {
+        return <String>[
+          _formatDelay(record['check_in']),
+          _getStatus(record),
+          _formatTime(record['check_out']),
+          _formatTime(record['check_in']),
+          DateFormat('yyyy/MM/dd').format(
+            record['date'] != null
+                ? DateTime.parse(record['date'].toString())
+                : _selectedDate,
+          ),
+        ];
+      }).toList();
+
+      final document = pw.Document();
+      document.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(28),
+          theme: pw.ThemeData.withFont(
+            base: regularFont,
+            bold: boldFont,
+          ),
+          build: (pw.Context pdfContext) => [
+            pw.Directionality(
+              textDirection: pw.TextDirection.rtl,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                children: [
+                  pw.Text(
+                    'الإسعاف المركزي',
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 20,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 6),
+                  pw.Text(
+                    'تقرير حضور موظف',
+                    textAlign: pw.TextAlign.center,
+                    style: const pw.TextStyle(fontSize: 14),
+                  ),
+                  pw.SizedBox(height: 16),
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(10),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromInt(0xFFF5F5F5),
+                      borderRadius: pw.BorderRadius.circular(6),
+                    ),
+                    child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('اسم الموظف: $employeeName',
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        pw.Text('المسمى الوظيفي: $jobTitle'),
+                        pw.Text('التاريخ: $reportDate'),
+                      ],
+                    ),
+                  ),
+                  pw.SizedBox(height: 16),
+                  pw.Table.fromTextArray(
+                    headers: [
+                      'مدة التأخير',
+                      'الحالة',
+                      'وقت الانصراف',
+                      'وقت الحضور',
+                      'التاريخ',
+                    ],
+                    data: rows,
+                    headerStyle: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
+                    ),
+                    cellStyle: const pw.TextStyle(fontSize: 9),
+                    headerDecoration: const pw.BoxDecoration(
+                      color: PdfColor.fromInt(0xFFD32F2F),
+                    ),
+                    rowDecoration: const pw.BoxDecoration(
+                      border: pw.Border(
+                        bottom: pw.BorderSide(
+                          color: PdfColor.fromInt(0xFFE3E6EA),
+                        ),
+                      ),
+                    ),
+                    cellAlignment: pw.Alignment.center,
+                    headerAlignment: pw.Alignment.center,
+                    cellPadding: const pw.EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 8,
+                    ),
+                    border: pw.TableBorder.all(
+                      color: const PdfColor.fromInt(0xFFE3E6EA),
+                      width: 0.6,
+                    ),
+                    columnWidths: {
+                      0: const pw.FlexColumnWidth(1.2),
+                      1: const pw.FlexColumnWidth(1.2),
+                      2: const pw.FlexColumnWidth(1.4),
+                      3: const pw.FlexColumnWidth(1.4),
+                      4: const pw.FlexColumnWidth(1.5),
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
 
-      if (!mounted) return;
-
-      setState(() {
-        _position = position;
-
-        _locationState = inRange
-            ? _LocationState.inRange
-            : _LocationState.outOfRange;
-      });
+      await Printing.layoutPdf(
+        onLayout: (_) => document.save(),
+        name: 'employee-report-$employeeName-$reportDate',
+      );
     } catch (e) {
       if (!mounted) return;
 
-      setState(() {
-        _locationState =
-            _LocationState.error;
-      });
-    }
-  }
-
-  Future<void> _refreshLocation() =>
-      _loadSettingsAndLocation();
-
-  Future<void> _scanAndCheckIn() async {
-    // لا نفتح الكاميرا إلا بعد نجاح التحقق من موقع الموظف.
-    if (!_canAct) return;
-
-    final qrPayload =
-        await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) =>
-            const QrScanScreen(),
-      ),
-    );
-
-    if (qrPayload == null) return;
-
-    await _submitCheckIn(
-      qrPayload: qrPayload,
-    );
-  }
-
-  Future<void> _submitCheckIn({
-    String? qrPayload,
-  }) async {
-    if (_position == null) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _feedback = null;
-    });
-
-    try {
-      await SupabaseService.instance.checkIn(
-        qrPayload: qrPayload,
-        latitude: _position!.latitude,
-        longitude: _position!.longitude,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشلت عملية الطباعة: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
-
-      if (!mounted) return;
-
-      final now = DateTime.now();
-
-      final formattedTime =
-          '${now.hour.toString().padLeft(2, '0')}:'
-          '${now.minute.toString().padLeft(2, '0')}';
-
-      setState(() {
-        _isCheckedIn = true;
-
-        _checkInTime =
-            formattedTime;
-        _checkOutTime = null;
-
-        _feedback =
-            context.tr(
-              'checkInSuccess',
-              {'name': widget.employee.title},
-            );
-      });
-    } on ApiException catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _feedback = e.message;
-      });
-    } catch (_) {
-      if (!mounted) return;
-
-      setState(() {
-        _feedback =
-            context.tr('checkInFailed');
-      });
     } finally {
       if (mounted) {
         setState(() {
-          _isSubmitting = false;
+          _printing = false;
         });
       }
     }
   }
-
-  Future<void> _submitCheckOut() async {
-    if (_position == null) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _feedback = null;
-    });
-
-    try {
-      await SupabaseService.instance.checkOut(
-        latitude: _position!.latitude,
-        longitude: _position!.longitude,
-      );
-
-      if (!mounted) return;
-
-      final now = DateTime.now();
-      final formattedTime =
-          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-
-      setState(() {
-        _isCheckedIn = false;
-
-        // نحتفظ بوقت الحضور ونضيف وقت الانصراف.
-        _checkOutTime = formattedTime;
-
-        _feedback =
-            context.tr('checkOutSuccess');
-      });
-    } on ApiException catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _feedback = e.message;
-      });
-    } catch (_) {
-      if (!mounted) return;
-
-      setState(() {
-        _feedback =
-            context.tr('checkOutFailed');
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _logout() async {
-    await SupabaseService.instance.logout();
-
-    if (!mounted) return;
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) =>
-            const LoginScreen(),
-      ),
-      (route) => false,
-    );
-  }
-
-  bool get _canAct =>
-      _locationState ==
-          _LocationState.inRange &&
-      !_isSubmitting;
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: AppLocaleController.instance.textDirection,
+      textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'app_icon.png',
-                width: 32,
-                height: 32,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(width: 10),
-              Text(context.tr('centralAmbulance')),
-            ],
-          ),
+          title: const Text('تقرير حضور الموظف'),
           centerTitle: true,
+          backgroundColor: const Color(0xFFD32F2F),
+          foregroundColor: Colors.white,
           actions: [
             IconButton(
-              onPressed: _logout,
-              icon: const Icon(
-                Icons.logout,
-                size: 20,
-              ),
-              tooltip: context.tr('logout'),
+              onPressed: _printing ? null : _printReport,
+              tooltip: 'طباعة التقرير',
+              icon: _printing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.print_outlined),
             ),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: _refreshLocation,
-          child: ListView(
-            padding:
-                const EdgeInsets.all(20),
+        body: Column(
+          children: [
+            // اختيار الموظف
+            if (_employeesList.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: DropdownButtonFormField<Map<String, dynamic>>(
+                  value: _selectedEmployee,
+                  decoration: const InputDecoration(
+                    labelText: 'اختر الموظف',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: _employeesList.map((emp) {
+                    return DropdownMenuItem<Map<String, dynamic>>(
+                      value: emp,
+                      child: Text(_getName(emp)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedEmployee = value;
+                    });
+                    _fetchEmployeesAndReport();
+                  },
+                ),
+              ),
+
+            // أدوات اختيار التاريخ والوقت
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _selectDate,
+                      icon: const Icon(Icons.calendar_month),
+                      label: Text(
+                        DateFormat('yyyy/MM/dd').format(_selectedDate),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    onPressed: _fetchEmployeesAndReport,
+                    tooltip: 'تحديث البيانات',
+                    icon: const Icon(Icons.refresh),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickOfficialStartTime,
+                      icon: const Icon(Icons.schedule),
+                      label: Text(
+                        'بداية الدوام الرسمي: ${_officialStartTime.format(context)}',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'سجل الموظف ليوم: ${DateFormat('yyyy/MM/dd').format(_selectedDate)}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFD32F2F)),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                context.tr(
-                  'welcome',
-                  {'name': widget.employee.title},
-                ),
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium,
-              ),
-
-              const SizedBox(height: 4),
-
-              Text(
-                widget.employee.roleLabel,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall,
-              ),
-
-              const SizedBox(height: 20),
-
-              _buildAttendanceStatusCard(),
-
+              const Icon(Icons.error_outline, size: 60, color: Colors.red),
               const SizedBox(height: 16),
-
-              _buildLocationCard(),
-
-              const SizedBox(height: 24),
-
-              if (_feedback != null) ...[
-                _buildFeedbackBanner(),
-
-                const SizedBox(height: 16),
-              ],
-
-              if (!_isCheckedIn) ...[
-                ElevatedButton.icon(
-                  onPressed:
-                      _canAct
-                          ? _scanAndCheckIn
-                          : null,
-                  icon: const Icon(
-                    Icons.qr_code_scanner,
-                  ),
-                  label: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            color: Colors.white,
-                          ),
-                        )
-                        : Text(context.tr('scanCheckIn')),
+              const Text(
+                'حدث خطأ أثناء تحميل تقرير الموظف',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
                 ),
-              ] else ...[
-                ElevatedButton(
-                  onPressed:
-                      _canAct
-                          ? _submitCheckOut
-                          : null,
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        AppColors.navy,
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            color: Colors.white,
-                          ),
-                        )
-                        : Text(context.tr('checkOut')),
-                ),
-              ],
+              ),
+              const SizedBox(height: 10),
+              Text(_error!, textAlign: TextAlign.center),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: _fetchEmployeesAndReport,
+                icon: const Icon(Icons.refresh),
+                label: const Text('إعادة المحاولة'),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildAttendanceStatusCard() {
-    return Container(
-      width: double.infinity,
-      padding:
-          const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _isCheckedIn
-            ? AppColors.successBg
-            : AppColors.surface,
-        borderRadius:
-            BorderRadius.circular(14),
-        border: Border.all(
-          color: _isCheckedIn
-              ? AppColors.success
-              : AppColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            _isCheckedIn || _checkOutTime != null
-                ? Icons.check_circle
-                : Icons.access_time_filled,
-            color: _isCheckedIn || _checkOutTime != null
-                ? AppColors.success
-                : Colors.grey,
-            size: 28,
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isCheckedIn
-                        ? context.tr('inService')
-                      : _checkOutTime != null
-                            ? context.tr('checkedOut')
-                            : context.tr('notChecked'),
-                  style: TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
-                    color: _isCheckedIn || _checkOutTime != null
-                        ? AppColors.success
-                        : Colors.black87,
-                  ),
-                ),
-
-                if (_checkInTime != null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(
-                      top: 2,
-                    ),
-                    child: Text(
-                      '⏰ ${context.tr('checkInTime')}: $_checkInTime',
-                      style:
-                          const TextStyle(
-                        fontSize: 13,
-                        color: AppColors
-                            .textSecondary,
-                      ),
-                    ),
-                  ),
-
-                if (_checkOutTime != null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(
-                      top: 2,
-                    ),
-                    child: Text(
-                      '⏱️ ${context.tr('checkOutTime')}: $_checkOutTime',
-                      style:
-                          const TextStyle(
-                        fontSize: 13,
-                        color: AppColors
-                            .textSecondary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeedbackBanner() {
-    final isSuccess =
-        _feedback!.contains('✅') ||
-        _feedback!.contains('👋');
-
-    return Container(
-      width: double.infinity,
-      padding:
-          const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isSuccess
-            ? AppColors.successBg
-            : AppColors.dangerBg,
-        borderRadius:
-            BorderRadius.circular(10),
-      ),
-      child: Text(
-        _feedback!,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isSuccess
-              ? AppColors.success
-              : AppColors.danger,
-          fontWeight:
-              FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLocationCard() {
-    late final String text;
-    late final Color color;
-    late final Color bg;
-    late final IconData icon;
-
-    switch (_locationState) {
-      case _LocationState.checking:
-        text = context.tr('checkingLocation');
-        color =
-            AppColors.textSecondary;
-        bg = AppColors.border
-            .withOpacity(0.4);
-        icon =
-            Icons.my_location;
-        break;
-
-      case _LocationState.inRange:
-        text = context.tr('insideRange');
-        color =
-            AppColors.success;
-        bg =
-            AppColors.successBg;
-        icon =
-            Icons.check_circle;
-        break;
-
-      case _LocationState.outOfRange:
-        text = context.tr('outsideRange');
-        color =
-            AppColors.danger;
-        bg =
-            AppColors.dangerBg;
-        icon =
-            Icons.location_off;
-        break;
-
-      case _LocationState.error:
-        text = context.tr('locationError');
-        color =
-            AppColors.warning;
-        bg = AppColors.dangerBg
-            .withOpacity(0.5);
-        icon =
-            Icons.error_outline;
-        break;
+      );
     }
 
+    if (_records.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _fetchEmployeesAndReport,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            SizedBox(height: 100),
+            Icon(Icons.person_off_outlined, size: 60, color: Colors.grey),
+            SizedBox(height: 16),
+            Center(
+              child: Text(
+                'لا توجد سجلات حضور لهذا الموظف في هذا التاريخ',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchEmployeesAndReport,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        itemCount: _records.length,
+        itemBuilder: (context, index) {
+          final record = _records[index];
+
+          final name = _getName(record);
+          final jobTitle = _getJobTitle(record);
+
+          final checkIn = _formatTime(record['check_in']);
+          final checkOut = _formatTime(record['check_out']);
+          final delay = _formatDelay(record['check_in']);
+
+          final status = _getStatus(record);
+
+          final hasCheckIn = record['check_in'] != null;
+          final hasCheckOut = record['check_out'] != null;
+
+          final isPresent = status == 'حاضر';
+          final isUnscheduled = status == 'غير مجدول';
+          final isCompleted = hasCheckOut || status == 'انصرف';
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: Card(
+                margin: const EdgeInsets.only(bottom: 14),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 25,
+                            child: Icon(Icons.person),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  jobTitle,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isPresent
+                                  ? Colors.green.withOpacity(0.12)
+                                  : isUnscheduled || isCompleted
+                                      ? Colors.grey.withOpacity(0.12)
+                                      : Colors.red.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              status,
+                              style: TextStyle(
+                                color: isPresent
+                                    ? Colors.green.shade700
+                                    : isUnscheduled || isCompleted
+                                        ? Colors.grey.shade700
+                                        : Colors.red.shade700,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _TimeBox(
+                              icon: Icons.login,
+                              title: 'وقت الحضور',
+                              value: checkIn,
+                              active: hasCheckIn,
+                              iconColor: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _TimeBox(
+                              icon: Icons.logout,
+                              title: 'وقت الانصراف',
+                              value: checkOut,
+                              active: hasCheckOut,
+                              iconColor: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      _TimeBox(
+                        icon: Icons.timer_outlined,
+                        title: 'مدة التأخير',
+                        value: delay,
+                        active: delay != '-' && delay != 'لا يوجد',
+                        iconColor: Colors.orange,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _TimeBox extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final bool active;
+  final Color iconColor;
+
+  const _TimeBox({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.active,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding:
-          const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius:
-            BorderRadius.circular(14),
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            color: color,
+            size: 22,
+            color: active ? iconColor : Colors.grey,
           ),
-
-          const SizedBox(width: 10),
-
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: color,
-                fontWeight:
-                    FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                    color: active ? Colors.black87 : Colors.grey,
+                  ),
+                ),
+              ],
             ),
           ),
-
-          if (_locationState !=
-              _LocationState.checking)
-            IconButton(
-              onPressed:
-                  _refreshLocation,
-              icon: Icon(
-                Icons.refresh,
-                color: color,
-                size: 20,
-              ),
-            ),
         ],
       ),
     );
