@@ -23,8 +23,11 @@ class _QrScanScreenState extends State<QrScanScreen> {
 
     if (value.isEmpty) return;
 
-    _handled = true;
+    setState(() {
+      _handled = true;
+    });
 
+    // إرجاع النتيجة وتأكيد الإغلاق
     Navigator.of(context).pop(value);
   }
 
@@ -51,13 +54,15 @@ class _QrScanScreenState extends State<QrScanScreen> {
               showGallery: false,
               showToggleCamera: true,
               showFlashlight: true,
+              actionButtonsAlignment: Alignment.topCenter,
             ),
 
+            // مربع التحديد المرئي لتوجيه الكاميرا
             IgnorePointer(
               child: Center(
                 child: Container(
-                  width: 240,
-                  height: 240,
+                  width: 250,
+                  height: 250,
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: AppColors.ambulanceRed,
@@ -69,8 +74,9 @@ class _QrScanScreenState extends State<QrScanScreen> {
               ),
             ),
 
+            // التعليمات السفلى
             Positioned(
-              bottom: 35,
+              bottom: 40,
               left: 24,
               right: 24,
               child: Container(
@@ -79,13 +85,17 @@ class _QrScanScreenState extends State<QrScanScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.65),
+                  color: Colors.black.withOpacity(0.75),
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white12,
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   context.tr('scanInstruction'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     height: 1.4,
