@@ -1,147 +1,169 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// ================================================================
-// AppLocaleController (لإدارة الرسائل والنصوص المترجمة)
-// ================================================================
-class AppLocaleController {
-  AppLocaleController._();
-  static final AppLocaleController instance = AppLocaleController._();
+import '../models/employee.dart';
+import '../models/dashboard_stats.dart';
+import '../models/attendance_settings.dart';
+import '../l10n/app_localizations.dart';
 
-  String text(String key) {
-    switch (key) {
-      case 'sessionExpired':
-        return 'انتهت جلسة التسجيل، يرجى إعادة الدخول';
-      case 'createUserError':
-        return 'حدث خطأ أثناء إنشاء حساب الموظف';
-      case 'authInvalid':
-        return 'بيانات الدخول غير صحيحة';
-      case 'attendanceOpen':
-        return 'لديك تسجيل حضور مفتوح بالفعل';
-      case 'noOpenAttendance':
-        return 'لا يوجد تسجيل حضور مفتوح لتسجيل الانصراف';
-      case 'notAuthorized':
-        return 'ليس لديك صلاحية لإجراء هذه العملية';
-      case 'invalidQr':
-        return 'رمز الـ QR الخاص بالحضور غير صالح';
-      case 'outsideAttendanceRange':
-        return 'أنت خارج نطاق موقع الحضور المسموح به';
-      case 'missingProfile':
-        return 'ملف الموظف غير مكتمل أو غير موجود';
-      case 'incompleteSettings':
-        return 'إعدادات الحضور غير مكتملة في النظام';
-      default:
-        return key;
-    }
-  }
-}
-
-// ================================================================
-// Models
-// ================================================================
-class DashboardStats {
-  final int totalEmployees;
-  final int presentCount;
-  final int absentCount;
-  final int lateCount;
-
-  DashboardStats({
-    required this.totalEmployees,
-    required this.presentCount,
-    required this.absentCount,
-    required this.lateCount,
-  });
-
-  factory DashboardStats.fromJson(Map<String, dynamic> json) {
-    return DashboardStats(
-      totalEmployees: json['total_employees'] ?? 0,
-      presentCount: json['present_count'] ?? 0,
-      absentCount: json['absent_count'] ?? 0,
-      lateCount: json['late_count'] ?? 0,
-    );
-  }
-}
-
-class Employee {
-  final String id;
-  final String fullName;
-  final String employeeNumber;
-  final String jobTitle;
-  final List<int> workDays;
-  final bool isCheckedIn;
-  final String? checkInTime;
-  final String? checkOutTime;
-
-  Employee({
-    required this.id,
-    required this.fullName,
-    required this.employeeNumber,
-    required this.jobTitle,
-    required this.workDays,
-    this.isCheckedIn = false,
-    this.checkInTime,
-    this.checkOutTime,
-  });
-
-  factory Employee.fromMap(
-    Map<String, dynamic> map, {
-    bool isCheckedIn = false,
-    String? checkInTime,
-    String? checkOutTime,
-  }) {
-    final rawWorkDays = map['work_days'];
-    List<int> parsedWorkDays = [];
-    if (rawWorkDays is List) {
-      parsedWorkDays = rawWorkDays.map((e) => int.parse(e.toString())).toList();
-    }
-
-    return Employee(
-      id: map['id']?.toString() ?? '',
-      fullName: map['full_name']?.toString() ?? '',
-      employeeNumber: map['employee_number']?.toString() ?? '',
-      jobTitle: map['job_title']?.toString() ?? '',
-      workDays: parsedWorkDays,
-      isCheckedIn: isCheckedIn,
-      checkInTime: checkInTime,
-      checkOutTime: checkOutTime,
-    );
-  }
-}
-
-class AttendanceSettings {
-  final double centerLatitude;
-  final double centerLongitude;
-  final double allowedRadiusMeters;
-  final String qrSecret;
-
-  AttendanceSettings({
-    required this.centerLatitude,
-    required this.centerLongitude,
-    required this.allowedRadiusMeters,
-    required this.qrSecret,
-  });
-
-  factory AttendanceSettings.fromMap(Map<String, dynamic> map) {
-    return AttendanceSettings(
-      centerLatitude: (map['center_latitude'] as num?)?.toDouble() ?? 0.0,
-      centerLongitude: (map['center_longitude'] as num?)?.toDouble() ?? 0.0,
-      allowedRadiusMeters: (map['allowed_radius_meters'] as num?)?.toDouble() ?? 0.0,
-      qrSecret: map['qr_secret']?.toString() ?? '',
-    );
-  }
-}
-
-// ================================================================
-// SupabaseService Class Definition
-// ================================================================
+/// نقطة الاتصال الوحيدة بين التطبيق وقاعدة بيانات Supabase.
 class SupabaseService {
-  SupabaseService._();
-  static final SupabaseService instance = SupabaseService._();
+  SupabaseService._internal();
 
-  final SupabaseClient _client = Supabase.instance.client;
+  static final SupabaseService instance =
+      SupabaseService._internal();
 
-  String? _formatAttendanceTime(dynamic timeValue) {
-    if (timeValue == null) return null;
-    return timeValue.toString();
+  SupabaseClient get _client => Supabase.instance.client;
+
+  // ================================================================
+  // المصادقة
+  // ================================================================
+
+  /// تسجيل الدخول باسم المستخدم.
+  Future<Employee> login({
+    required String username,
+    required String password,
+  }) async {
+    String? email;
+
+    try {
+      email = await _client.rpc(
+        'email_for_username',
+        params: {
+          'p_username': username.trim(),
+        },
+      ) as String?;
+    } on PostgrestException catch (e) {
+      throw ApiException(e.message);
+    }
+
+    if (email == null || email.isEmpty) {
+      throw ApiException(
+        AppLocaleController.instance.text('authInvalid'),
+      );
+    }
+
+    final AuthResponse res;
+
+    try {
+      res = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } on AuthException catch (e) {
+      throw ApiException(
+        _arabicAuthError(e.message),
+      );
+    }
+
+    final user = res.user;
+
+    if (user == null) {
+      throw ApiException(
+        AppLocaleController.instance.text('authInvalid'),
+      );
+    }
+
+    return _fetchEmployeeProfile(user.id);
+  }
+
+  Future<void> logout() async {
+    await _client.auth.signOut();
+  }
+
+  Future<bool> get isLoggedIn async {
+    return _client.auth.currentSession != null;
+  }
+
+  /// الموظف الحالي عند فتح التطبيق.
+  Future<Employee?> currentEmployee() async {
+    final user = _client.auth.currentUser;
+
+    if (user == null) {
+      return null;
+    }
+
+    try {
+      return await _fetchEmployeeProfile(user.id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Employee> _fetchEmployeeProfile(
+    String userId,
+  ) async {
+    final row = await _client
+        .from('attendance_users')
+        .select()
+        .eq('id', userId)
+        .single();
+
+    final isCheckedIn =
+        await _hasOpenAttendance(userId);
+
+    Map<String, dynamic>? todayAttendance;
+    try {
+      todayAttendance =
+          await _fetchTodayAttendance(userId);
+    } on PostgrestException {
+      // لا نمنع تسجيل الدخول إذا تعذر تحميل الوقتين فقط.
+    }
+
+    return Employee.fromMap(
+      row,
+      isCheckedIn: isCheckedIn,
+      checkInTime: _formatAttendanceTime(
+        todayAttendance?['check_in'],
+      ),
+      checkOutTime: _formatAttendanceTime(
+        todayAttendance?['check_out'],
+      ),
+    );
+  }
+
+  Future<Map<String, dynamic>?> _fetchTodayAttendance(
+    String employeeId,
+  ) async {
+    final now = DateTime.now();
+    final dateString =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+
+    final rows = await _client
+        .from('attendance_records')
+        .select('check_in, check_out')
+        .eq('user_id', employeeId)
+        .eq('attendance_date', dateString)
+        .order('check_in', ascending: false)
+        .limit(1);
+
+    if ((rows as List).isEmpty) return null;
+
+    return Map<String, dynamic>.from(rows.first);
+  }
+
+  String? _formatAttendanceTime(dynamic value) {
+    if (value == null) return null;
+
+    final dateTime =
+        DateTime.tryParse(value.toString())?.toLocal();
+    if (dateTime == null) return null;
+
+    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<bool> _hasOpenAttendance(
+    String employeeId,
+  ) async {
+    final rows = await _client
+        .from('attendance_records')
+        .select('id')
+        .eq('user_id', employeeId)
+        .isFilter('check_out', null)
+        .limit(1);
+
+    return (rows as List).isNotEmpty;
   }
 
   // ================================================================
@@ -153,7 +175,8 @@ class SupabaseService {
     required double latitude,
     required double longitude,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId =
+        _client.auth.currentUser?.id;
 
     if (userId == null) {
       throw ApiException(
@@ -181,7 +204,8 @@ class SupabaseService {
     required double latitude,
     required double longitude,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId =
+        _client.auth.currentUser?.id;
 
     if (userId == null) {
       throw ApiException(
@@ -214,7 +238,9 @@ class SupabaseService {
         'attendance_dashboard_stats',
       );
 
-      final row = (result as List).first as Map<String, dynamic>;
+      final row =
+          (result as List).first
+              as Map<String, dynamic>;
 
       return DashboardStats.fromJson(row);
     } on PostgrestException catch (e) {
@@ -230,6 +256,9 @@ class SupabaseService {
     String? search,
   }) async {
     try {
+      // مهم:
+      // لا نستخدم role هنا لأنه غير موجود في الجدول
+      // حسب قاعدة البيانات الحالية.
       var query = _client
           .from('attendance_users')
           .select()
@@ -238,7 +267,8 @@ class SupabaseService {
             'مدير النظام',
           );
 
-      if (search != null && search.trim().isNotEmpty) {
+      if (search != null &&
+          search.trim().isNotEmpty) {
         final text = search.trim();
 
         query = query.or(
@@ -247,8 +277,10 @@ class SupabaseService {
         );
       }
 
-      final rows = await query.order('full_name');
+      final rows =
+          await query.order('full_name');
 
+      // الموظفون الذين لديهم حضور مفتوح حاليًا.
       final now = DateTime.now();
       final dateString =
           '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
@@ -315,7 +347,18 @@ class SupabaseService {
   // تقرير الحضور والانصراف
   // ================================================================
 
-  Future<List<Map<String, dynamic>>> fetchAttendanceReport(
+  /// يجلب جميع الموظفين الذين سجلوا حضورهم في تاريخ معين.
+  ///
+  /// البيانات التي يرجعها التقرير:
+  /// - username
+  /// - full_name
+  /// - job_title
+  /// - attendance_date
+  /// - check_in
+  /// - check_out
+  /// - status
+  Future<List<Map<String, dynamic>>>
+      fetchAttendanceReport(
     DateTime date,
   ) async {
     try {
@@ -337,7 +380,8 @@ class SupabaseService {
 
       return (result as List)
           .map(
-            (row) => Map<String, dynamic>.from(row),
+            (row) =>
+                Map<String, dynamic>.from(row),
           )
           .toList();
     } on PostgrestException catch (e) {
@@ -346,7 +390,7 @@ class SupabaseService {
   }
 
   // ================================================================
-  // تقرير شهري لموظف واحد
+  // تقرير شهري لموظف واحد (كام يوم حضر خلال فترة معينة)
   // ================================================================
 
   Future<Map<String, dynamic>?> fetchEmployeeMonthlySummary({
@@ -395,21 +439,25 @@ class SupabaseService {
     String? phone,
   }) async {
     try {
-      final response = await _client.functions.invoke(
+      final response =
+          await _client.functions.invoke(
         'create-attendance-user',
         body: {
           'username': username.trim(),
           'password': password,
           'full_name': fullName.trim(),
-          'employee_number': employeeNumber.trim(),
+          'employee_number':
+              employeeNumber.trim(),
           'job_title': jobTitle,
           'role': role,
-          'department': department?.trim(),
+          'department':
+              department?.trim(),
           'phone': phone?.trim(),
         },
       );
 
-      if (response.status < 200 || response.status >= 300) {
+      if (response.status < 200 ||
+          response.status >= 300) {
         throw ApiException(
           AppLocaleController.instance.text('createUserError'),
         );
@@ -429,7 +477,8 @@ class SupabaseService {
   // إعدادات الحضور
   // ================================================================
 
-  Future<AttendanceSettings> fetchAttendanceSettings() async {
+  Future<AttendanceSettings>
+      fetchAttendanceSettings() async {
     try {
       final row = await _client
           .from('attendance_settings')
@@ -449,46 +498,71 @@ class SupabaseService {
   // رسائل الأخطاء
   // ================================================================
 
-  String _arabicAuthError(String message) {
-    if (message.toLowerCase().contains('invalid login credentials')) {
+  String _arabicAuthError(
+    String message,
+  ) {
+    if (message
+        .toLowerCase()
+        .contains(
+          'invalid login credentials',
+        )) {
       return AppLocaleController.instance.text('authInvalid');
     }
 
     return message;
   }
 
-  String _arabicDatabaseError(String message) {
-    final lower = message.toLowerCase();
+  String _arabicDatabaseError(
+    String message,
+  ) {
+    final lower =
+        message.toLowerCase();
 
-    if (lower.contains('open attendance already exists')) {
+    if (lower.contains(
+      'open attendance already exists',
+    )) {
       return AppLocaleController.instance.text('attendanceOpen');
     }
 
-    if (lower.contains('no open attendance')) {
+    if (lower.contains(
+      'no open attendance',
+    )) {
       return AppLocaleController.instance.text('noOpenAttendance');
     }
 
-    if (lower.contains('not authenticated')) {
+    if (lower.contains(
+      'not authenticated',
+    )) {
       return AppLocaleController.instance.text('sessionExpired');
     }
 
-    if (lower.contains('not authorized')) {
+    if (lower.contains(
+      'not authorized',
+    )) {
       return AppLocaleController.instance.text('notAuthorized');
     }
 
-    if (lower.contains('invalid attendance qr code')) {
+    if (lower.contains(
+      'invalid attendance qr code',
+    )) {
       return AppLocaleController.instance.text('invalidQr');
     }
 
-    if (lower.contains('outside attendance center range')) {
+    if (lower.contains(
+      'outside attendance center range',
+    )) {
       return AppLocaleController.instance.text('outsideAttendanceRange');
     }
 
-    if (lower.contains('attendance user profile is missing')) {
+    if (lower.contains(
+      'attendance user profile is missing',
+    )) {
       return AppLocaleController.instance.text('missingProfile');
     }
 
-    if (lower.contains('attendance settings are incomplete')) {
+    if (lower.contains(
+      'attendance settings are incomplete',
+    )) {
       return AppLocaleController.instance.text('incompleteSettings');
     }
 
