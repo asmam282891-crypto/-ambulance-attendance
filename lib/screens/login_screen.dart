@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/employee.dart';
-import '../services/supabase_service.dart';
-import '../l10n/app_localizations.dart';
-import 'attendance_screen.dart';
-import 'admin_dashboard_screen.dart';
+
+import 'package:ambulance_attendance/models/employee.dart';
+import 'package:ambulance_attendance/services/supabase_service.dart';
+import 'package:ambulance_attendance/l10n/app_localizations.dart';
+import 'package:ambulance_attendance/screens/attendance_screen.dart';
+import 'package:ambulance_attendance/screens/admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -95,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     context.tr('appTitle'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -105,11 +106,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     context.tr('loginSubtitle'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
 
-                  // حقل اسم المستخدم المباشر
+                  // حقل اسم المستخدم
                   TextField(
                     controller: _usernameController,
                     decoration: InputDecoration(
@@ -126,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // حقل كلمة المرور المباشر
+                  // حقل كلمة المرور
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -198,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             )
                           : Text(
                               context.tr('login'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
