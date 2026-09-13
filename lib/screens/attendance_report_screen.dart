@@ -43,9 +43,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     });
 
     try {
-      // 1. جلب سجلات الحضور من الخدمة
-      _allRecords = await SupabaseService.instance.getAttendanceReport(
-        date: _selectedDate,
+      // 1. جلب سجلات الحضور من الخدمة (تم تعديل اسم الدالة إلى fetchAttendanceReport)
+      _allRecords = await SupabaseService.instance.fetchAttendanceReport(
+        _selectedDate,
       );
 
       // 2. تجميع وتحديث قائمة الموظفين المتاحة
@@ -224,7 +224,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   }
 
   String _getName(Map<String, dynamic> record) {
-    // التحقق من العلاقة مع جدول الموظفين (profiles / users)
     if (record['profiles'] != null && record['profiles'] is Map) {
       final profile = record['profiles'] as Map<String, dynamic>;
       final name = profile['full_name'] ?? profile['name'] ?? profile['username'];
@@ -236,7 +235,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       if (name != null && name.toString().isNotEmpty) return name.toString();
     }
 
-    // القراءة المباشرة من الحقل
     return (record['full_name'] ??
             record['fullName'] ??
             record['name'] ??
