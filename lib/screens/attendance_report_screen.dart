@@ -5,6 +5,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'package:ambulance_attendance/services/supabase_service.dart';
+
 enum ReportType { daily, monthly, employee, absent, late }
 
 class AttendanceReportScreen extends StatefulWidget {
@@ -22,12 +24,9 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
   bool _printing = false;
   String? _error;
 
-  // الموظف المختار (في حال اختيار تقرير موظف)
   String? _selectedEmployeeName;
 
-  // القائمة الكاملة للسجلات
   List<Map<String, dynamic>> _allRecords = [];
-  // السجلات المفلترة بناءً على نوع التقرير
   List<Map<String, dynamic>> _filteredRecords = [];
 
   @override
@@ -43,12 +42,10 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     });
 
     try {
-      // TODO: قم بجلب البيانات الواقعية من الـ API أو Database الخاصة بك هنا
-      // مثال:
-      // final data = await supabase.from('attendance').select();
-      // _allRecords = List<Map<String, dynamic>>.from(data);
-
-      await Future.delayed(const Duration(milliseconds: 500));
+      // جلب السجلات مباشرة من خدمة Supabase
+      _allRecords = await SupabaseService.instance.getAttendanceReport(
+        date: _selectedDate,
+      );
       _applyReportFilter();
     } catch (e) {
       _error = e.toString();
@@ -61,7 +58,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     }
   }
 
-  // فلترة السجلات بناءً على نوع التقرير المختار
   void _applyReportFilter() {
     setState(() {
       switch (_selectedReportType) {
@@ -164,7 +160,7 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
       setState(() {
         _selectedDate = picked;
       });
-      _applyReportFilter();
+      _loadReport();
     }
   }
 
@@ -263,7 +259,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
     }
   }
 
-  // استخراج قائمة بأسماء الموظفين للفلترة
   List<String> _getUniqueEmployeeNames() {
     final names = _allRecords.map((r) => _getName(r)).toSet().toList();
     names.sort();
@@ -447,7 +442,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
         ),
         body: Column(
           children: [
-            // شريط اختيار نوع التقرير
             Container(
               height: 50,
               margin: const EdgeInsets.only(top: 12),
@@ -463,8 +457,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                 ],
               ),
             ),
-
-            // خيار اختيار موظف إذا كان التقرير المحدد هو تقرير موظف
             if (_selectedReportType == ReportType.employee)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -486,8 +478,6 @@ class _AttendanceReportScreenState extends State<AttendanceReportScreen> {
                   },
                 ),
               ),
-
-            // أدوات اختيار التاريخ والوقت
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: Row(
