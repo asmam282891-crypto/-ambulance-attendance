@@ -642,71 +642,72 @@ class _MonthlyAttendanceReportScreenState
         ),
       ),
       const SizedBox(height: 10),
-      ..._dailyRecords.map(_buildDayTile),
+      _buildDailyTable(),
     ];
   }
 
-  Widget _buildDayTile(Map<String, dynamic> record) {
-    final date = DateTime.parse(record['the_date'].toString());
-    final status = (record['status'] ?? '-').toString();
-    final checkIn = _formatTime(record['check_in']);
-    final checkOut = _formatTime(record['check_out']);
-    final delay = _formatDelay(record['check_in']);
-
-    final isPresent = status == 'حاضر' || status == 'انصرف';
-    final isAbsent = status == 'غائب';
-
-    final Color badgeColor = isPresent
-        ? AppColors.success
-        : isAbsent
-            ? AppColors.danger
-            : Colors.grey;
-    final Color badgeBg = isPresent
-        ? AppColors.successBg
-        : isAbsent
-            ? AppColors.dangerBg
-            : Colors.grey.shade200;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 90,
-              child: Text(
-                DateFormat('yyyy/MM/dd').format(date),
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                status,
-                style: TextStyle(
-                  color: badgeColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-            const Spacer(),
-            if (isPresent) ...[
-              Text('حضور $checkIn', style: const TextStyle(fontSize: 11)),
-              const SizedBox(width: 8),
-              Text('انصراف $checkOut', style: const TextStyle(fontSize: 11)),
-              const SizedBox(width: 8),
-              Text(
-                'تأخير $delay',
-                style: const TextStyle(fontSize: 11, color: Colors.orange),
-              ),
-            ],
+  Widget _buildDailyTable() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowHeight: 40,
+          dataRowMinHeight: 36,
+          dataRowMaxHeight: 40,
+          columnSpacing: 18,
+          headingTextStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+          dataTextStyle: const TextStyle(fontSize: 11.5),
+          columns: const [
+            DataColumn(label: Text('التاريخ')),
+            DataColumn(label: Text('الحالة')),
+            DataColumn(label: Text('حضور')),
+            DataColumn(label: Text('انصراف')),
+            DataColumn(label: Text('تأخير')),
           ],
+          rows: _dailyRecords.map((record) {
+            final date = DateTime.parse(record['the_date'].toString());
+            final status = (record['status'] ?? '-').toString();
+            final isPresent = status == 'حاضر' || status == 'انصرف';
+            final isAbsent = status == 'غائب';
+
+            final Color statusColor = isPresent
+                ? AppColors.success
+                : isAbsent
+                    ? AppColors.danger
+                    : Colors.grey;
+
+            return DataRow(
+              cells: [
+                DataCell(Text(DateFormat('MM/dd').format(date))),
+                DataCell(
+                  Text(
+                    status,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                DataCell(Text(isPresent ? _formatTime(record['check_in']) : '-')),
+                DataCell(Text(isPresent ? _formatTime(record['check_out']) : '-')),
+                DataCell(
+                  Text(
+                    isPresent ? _formatDelay(record['check_in']) : '-',
+                    style: const TextStyle(color: Colors.orange),
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
         ),
       ),
     );
