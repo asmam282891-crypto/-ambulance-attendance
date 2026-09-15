@@ -425,6 +425,40 @@ class SupabaseService {
   }
 
   // ================================================================
+  // تفاصيل يومية كاملة لموظف واحد (للتقرير الشامل)
+  // ================================================================
+
+  Future<List<Map<String, dynamic>>> fetchEmployeeMonthlyDetail({
+    required String userId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      String formatDate(DateTime date) =>
+          '${date.year.toString().padLeft(4, '0')}-'
+          '${date.month.toString().padLeft(2, '0')}-'
+          '${date.day.toString().padLeft(2, '0')}';
+
+      final result = await _client.rpc(
+        'attendance_user_monthly_detail',
+        params: {
+          'p_user_id': userId,
+          'p_start_date': formatDate(startDate),
+          'p_end_date': formatDate(endDate),
+        },
+      );
+
+      if (result == null) return [];
+
+      return (result as List)
+          .map((row) => Map<String, dynamic>.from(row))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ApiException(e.message);
+    }
+  }
+
+  // ================================================================
   // إنشاء موظف
   // ================================================================
 
